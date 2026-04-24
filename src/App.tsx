@@ -9,12 +9,9 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import Classes from "./pages/Classes";
-import Expenses from "./pages/Expenses";
 import Instructors from "./pages/Instructors";
 import Students from "./pages/Students";
 import Locations from "./pages/Locations";
-import Reports from "./pages/Reports";
-import CashFlow from "./pages/CashFlow";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -38,12 +35,9 @@ const App = () => (
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
             <Route path="/classes" element={<ProtectedRoute><Classes /></ProtectedRoute>} />
-            <Route path="/expenses" element={<ProtectedRoute><Expenses /></ProtectedRoute>} />
             <Route path="/instructors" element={<ProtectedRoute><Instructors /></ProtectedRoute>} />
             <Route path="/students" element={<ProtectedRoute><Students /></ProtectedRoute>} />
             <Route path="/locations" element={<ProtectedRoute><Locations /></ProtectedRoute>} />
-            <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
-            <Route path="/cash-flow" element={<ProtectedRoute><CashFlow /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
