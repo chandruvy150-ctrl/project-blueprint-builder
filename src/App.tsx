@@ -9,12 +9,9 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import Classes from "./pages/Classes";
-import Expenses from "./pages/Expenses";
 import Instructors from "./pages/Instructors";
 import Students from "./pages/Students";
 import Locations from "./pages/Locations";
-import Reports from "./pages/Reports";
-import CashFlow from "./pages/CashFlow";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
