@@ -13,6 +13,7 @@ import Instructors from "./pages/Instructors";
 import Students from "./pages/Students";
 import Locations from "./pages/Locations";
 import NotFound from "./pages/NotFound";
+import Join from "./pages/Join";
 
 const queryClient = new QueryClient();
 
@@ -33,6 +34,7 @@ const App = () => (
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/join/:ownerId" element={<Join />} />
             <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
             <Route path="/classes" element={<ProtectedRoute><Classes /></ProtectedRoute>} />
             <Route path="/instructors" element={<ProtectedRoute><Instructors /></ProtectedRoute>} />
