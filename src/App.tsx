@@ -13,6 +13,7 @@ import Instructors from "./pages/Instructors";
 import Students from "./pages/Students";
 import Locations from "./pages/Locations";
 import NotFound from "./pages/NotFound";
+import Join from "./pages/Join";
 
 const queryClient = new QueryClient();
 
