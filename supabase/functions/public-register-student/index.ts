@@ -82,10 +82,14 @@ Deno.serve(async (req) => {
     }
 
     if (batchId) {
-      await supabase.rpc("noop"); // placeholder – ignore if missing
+      const { data: cur } = await supabase
+        .from("registration_batches")
+        .select("registrations_count")
+        .eq("id", batchId)
+        .maybeSingle();
       await supabase
         .from("registration_batches")
-        .update({ registrations_count: (await supabase.from("registration_batches").select("registrations_count").eq("id", batchId).maybeSingle()).data?.registrations_count + 1 || 1 })
+        .update({ registrations_count: (cur?.registrations_count ?? 0) + 1 })
         .eq("id", batchId);
     }
 
