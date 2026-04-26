@@ -244,6 +244,39 @@ export type Database = {
         }
         Relationships: []
       }
+      registration_batches: {
+        Row: {
+          closed_at: string | null
+          created_at: string
+          id: string
+          is_open: boolean
+          name: string
+          owner_id: string
+          registrations_count: number
+          token: string
+        }
+        Insert: {
+          closed_at?: string | null
+          created_at?: string
+          id?: string
+          is_open?: boolean
+          name: string
+          owner_id: string
+          registrations_count?: number
+          token?: string
+        }
+        Update: {
+          closed_at?: string | null
+          created_at?: string
+          id?: string
+          is_open?: boolean
+          name?: string
+          owner_id?: string
+          registrations_count?: number
+          token?: string
+        }
+        Relationships: []
+      }
       staff_invitations: {
         Row: {
           accepted_at: string | null
@@ -270,6 +303,7 @@ export type Database = {
       }
       students: {
         Row: {
+          address: string | null
           created_at: string
           email: string | null
           id: string
@@ -282,6 +316,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          address?: string | null
           created_at?: string
           email?: string | null
           id?: string
@@ -294,6 +329,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          address?: string | null
           created_at?: string
           email?: string | null
           id?: string
