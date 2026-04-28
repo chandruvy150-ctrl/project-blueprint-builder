@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Pencil, Trash2, Phone, PhoneCall, MessageCircle, MessageSquare, Copy, QrCode, Share2, Users, Lock, Unlock } from "lucide-react";
+import { Plus, Pencil, Trash2, Phone, PhoneCall, MessageCircle, MessageSquare, Copy, QrCode, Share2, Users, Lock, Unlock, IndianRupee } from "lucide-react";
 import { toast } from "sonner";
 import { QRCodeSVG } from "qrcode.react";
 
@@ -38,8 +38,21 @@ interface Batch {
 
 const membershipTypes = ["drop-in", "monthly", "quarterly", "annual", "package"];
 const membershipStatuses = ["active", "inactive", "expired"];
+const paymentMethods = ["cash", "upi", "card", "bank-transfer", "other"];
+const paymentPlans = ["drop-in", "monthly", "quarterly", "annual", "package"];
 const phoneRegex = /^[+\d][\d\s\-()]{6,19}$/;
 const normalizePhone = (p: string) => p.replace(/[^\d+]/g, "");
+
+interface Payment {
+  id: string;
+  student_id: string;
+  amount: number;
+  paid_on: string;
+  method: string;
+  plan: string;
+  valid_until: string | null;
+  notes: string | null;
+}
 
 const Students = () => {
   const { user } = useAuth();
@@ -58,6 +71,11 @@ const Students = () => {
   const [newBatchOpen, setNewBatchOpen] = useState(false);
   const [newBatchName, setNewBatchName] = useState("");
   const [batchQr, setBatchQr] = useState<Batch | null>(null);
+
+  // Payments state (owner-only)
+  const [payStudent, setPayStudent] = useState<Student | null>(null);
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [payForm, setPayForm] = useState({ amount: "", paid_on: new Date().toISOString().slice(0, 10), method: "cash", plan: "monthly", valid_until: "", notes: "" });
 
   const fetch = async () => {
     if (!user) return;
@@ -171,6 +189,47 @@ const Students = () => {
   };
 
   const batchUrl = (token: string) => `${window.location.origin}/b/${token}`;
+
+  // Payments
+  const openPayments = async (s: Student) => {
+    setPayStudent(s);
+    setPayForm({ amount: "", paid_on: new Date().toISOString().slice(0, 10), method: "cash", plan: s.membership_type || "monthly", valid_until: "", notes: "" });
+    const { data } = await supabase
+      .from("student_payments")
+      .select("*")
+      .eq("student_id", s.id)
+      .order("paid_on", { ascending: false });
+    setPayments((data as Payment[]) || []);
+  };
+
+  const addPayment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !payStudent) return;
+    const amount = parseFloat(payForm.amount);
+    if (!amount || amount <= 0) { toast.error("Enter a valid amount"); return; }
+    const { error } = await supabase.from("student_payments").insert({
+      student_id: payStudent.id,
+      user_id: user.id,
+      amount,
+      paid_on: payForm.paid_on,
+      method: payForm.method,
+      plan: payForm.plan,
+      valid_until: payForm.valid_until || null,
+      notes: payForm.notes.trim() || null,
+    });
+    if (error) { toast.error(error.message); return; }
+    toast.success("Payment recorded");
+    setPayForm({ ...payForm, amount: "", notes: "" });
+    openPayments(payStudent);
+  };
+
+  const deletePayment = async (id: string) => {
+    await supabase.from("student_payments").delete().eq("id", id);
+    toast.success("Payment removed");
+    if (payStudent) openPayments(payStudent);
+  };
+
+  const totalPaid = payments.reduce((sum, p) => sum + Number(p.amount), 0);
 
   const statusColor = (s: string | null) => {
     if (s === "active") return "bg-success/10 text-success";
@@ -423,6 +482,7 @@ const Students = () => {
                       <Phone className="h-4 w-4" />
                     </a>
                   )}
+                  <button onClick={() => openPayments(s)} aria-label="Payments" className="p-2 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"><IndianRupee className="h-4 w-4" /></button>
                   <button onClick={() => handleEdit(s)} aria-label="Edit" className="p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"><Pencil className="h-4 w-4" /></button>
                   <button onClick={() => handleDelete(s.id)} aria-label="Delete" className="p-2 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"><Trash2 className="h-4 w-4" /></button>
                 </div>
@@ -431,6 +491,66 @@ const Students = () => {
           ))}
         </div>
       )}
+
+      {/* Payments dialog (owner only) */}
+      <Dialog open={!!payStudent} onOpenChange={(v) => !v && setPayStudent(null)}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-display flex items-center gap-2"><IndianRupee className="h-5 w-5" />{payStudent?.name}</DialogTitle>
+            <DialogDescription>Total paid: <span className="font-semibold text-foreground">₹{totalPaid.toLocaleString("en-IN")}</span> · {payments.length} payment{payments.length === 1 ? "" : "s"}</DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={addPayment} className="space-y-3 border border-border rounded-lg p-4 bg-muted/30">
+            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Record payment</p>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5"><Label className="text-xs">Amount (₹)</Label><Input type="number" inputMode="decimal" min="0" step="0.01" value={payForm.amount} onChange={(e) => setPayForm({ ...payForm, amount: e.target.value })} required /></div>
+              <div className="space-y-1.5"><Label className="text-xs">Date</Label><Input type="date" value={payForm.paid_on} onChange={(e) => setPayForm({ ...payForm, paid_on: e.target.value })} required /></div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Method</Label>
+                <Select value={payForm.method} onValueChange={(v) => setPayForm({ ...payForm, method: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{paymentMethods.map((m) => <SelectItem key={m} value={m}>{m.charAt(0).toUpperCase() + m.slice(1)}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Plan</Label>
+                <Select value={payForm.plan} onValueChange={(v) => setPayForm({ ...payForm, plan: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{paymentPlans.map((p) => <SelectItem key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5 col-span-2"><Label className="text-xs">Valid until <span className="text-muted-foreground">(optional)</span></Label><Input type="date" value={payForm.valid_until} onChange={(e) => setPayForm({ ...payForm, valid_until: e.target.value })} /></div>
+              <div className="space-y-1.5 col-span-2"><Label className="text-xs">Notes</Label><Input value={payForm.notes} onChange={(e) => setPayForm({ ...payForm, notes: e.target.value })} maxLength={500} /></div>
+            </div>
+            <Button type="submit" className="w-full"><Plus className="h-4 w-4 mr-2" />Add payment</Button>
+          </form>
+
+          <div className="space-y-2">
+            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">History</p>
+            {payments.length === 0 ? (
+              <p className="text-sm text-muted-foreground italic py-4 text-center">No payments yet.</p>
+            ) : (
+              payments.map((p) => (
+                <div key={p.id} className="flex items-center justify-between gap-2 p-3 rounded-lg border border-border bg-background">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-semibold">₹{Number(p.amount).toLocaleString("en-IN")}</span>
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">{p.plan}</span>
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">{p.method}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {new Date(p.paid_on).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                      {p.valid_until && ` · valid till ${new Date(p.valid_until).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}`}
+                    </p>
+                    {p.notes && <p className="text-xs text-muted-foreground truncate mt-0.5">{p.notes}</p>}
+                  </div>
+                  <button onClick={() => deletePayment(p.id)} aria-label="Delete payment" className="p-2 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0"><Trash2 className="h-4 w-4" /></button>
+                </div>
+              ))
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
