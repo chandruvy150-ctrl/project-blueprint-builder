@@ -482,6 +482,7 @@ const Students = () => {
                       <Phone className="h-4 w-4" />
                     </a>
                   )}
+                  <button onClick={() => openPayments(s)} aria-label="Payments" className="p-2 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"><IndianRupee className="h-4 w-4" /></button>
                   <button onClick={() => handleEdit(s)} aria-label="Edit" className="p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"><Pencil className="h-4 w-4" /></button>
                   <button onClick={() => handleDelete(s.id)} aria-label="Delete" className="p-2 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"><Trash2 className="h-4 w-4" /></button>
                 </div>
