@@ -8,8 +8,8 @@ import { StudioProvider } from "@/contexts/StudioContext";
 import AppLayout from "@/components/layout/AppLayout";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
-import Classes from "./pages/Classes";
-import Students from "./pages/Students";
+import Customers from "./pages/Customers";
+import Payments from "./pages/Payments";
 import NotFound from "./pages/NotFound";
 import Join from "./pages/Join";
 
@@ -38,9 +38,10 @@ const App = () => (
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/join/:ownerId" element={<Join />} />
             <Route path="/b/:token" element={<Join />} />
-            <Route path="/" element={<ProtectedRoute><Students /></ProtectedRoute>} />
-            <Route path="/classes" element={<ProtectedRoute><Classes /></ProtectedRoute>} />
+            <Route path="/" element={<ProtectedRoute><Customers /></ProtectedRoute>} />
+            <Route path="/payments" element={<ProtectedRoute><Payments /></ProtectedRoute>} />
             <Route path="/students" element={<Navigate to="/" replace />} />
+            <Route path="/classes" element={<Navigate to="/" replace />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
