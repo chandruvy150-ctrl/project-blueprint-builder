@@ -72,6 +72,11 @@ const Students = () => {
   const [newBatchName, setNewBatchName] = useState("");
   const [batchQr, setBatchQr] = useState<Batch | null>(null);
 
+  // Payments state (owner-only)
+  const [payStudent, setPayStudent] = useState<Student | null>(null);
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [payForm, setPayForm] = useState({ amount: "", paid_on: new Date().toISOString().slice(0, 10), method: "cash", plan: "monthly", valid_until: "", notes: "" });
+
   const fetch = async () => {
     if (!user) return;
     const { data } = await supabase.from("students").select("*").eq("user_id", user.id).order("name");
