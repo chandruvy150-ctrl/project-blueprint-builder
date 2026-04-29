@@ -29,6 +29,7 @@ interface Batch {
   description: string | null;
   start_date: string | null;
   fee: number;
+  public_token: string;
 }
 
 const phoneRegex = /^[+\d][\d\s\-()]{6,19}$/;
