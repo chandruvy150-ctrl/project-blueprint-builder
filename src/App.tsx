@@ -11,7 +11,6 @@ import ResetPassword from "./pages/ResetPassword";
 import Customers from "./pages/Customers";
 import Payments from "./pages/Payments";
 import NotFound from "./pages/NotFound";
-import Join from "./pages/Join";
 
 const queryClient = new QueryClient();
 
