@@ -130,7 +130,15 @@ const Join = () => {
                 className="rounded-xl border-2 text-base px-4 py-3 min-h-[120px]"
               />
             </div>
-            <div className="flex justify-end pt-2">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-2">
+              <a
+                href="https://youtube.com/@clearpictures8918?si=NEN__ftlagnEfnpV"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-display text-lg text-primary hover:underline"
+              >
+                Follow us on YouTube
+              </a>
               <Button
                 type="submit"
                 disabled={submitting}
