@@ -84,10 +84,9 @@ const Join = () => {
       <Card className="max-w-2xl w-full border-none md:border md:shadow-sm">
         <CardHeader className="px-2 md:px-6">
           <CardTitle className="font-display text-3xl">Join {batch.name}</CardTitle>
-          <CardDescription className="text-base">
-            {batch.description || "Fill in your details to register."}
-            <div className="mt-2 text-foreground font-medium">Fee: ₹{Number(batch.fee).toLocaleString()}</div>
-          </CardDescription>
+          {batch.description && (
+            <CardDescription className="text-base">{batch.description}</CardDescription>
+          )}
         </CardHeader>
         <CardContent className="px-2 md:px-6">
           <form onSubmit={submit} className="space-y-7">
