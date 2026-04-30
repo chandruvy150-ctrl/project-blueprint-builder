@@ -121,13 +121,13 @@ const Join = () => {
               />
             </div>
             <div className="space-y-3">
-              <Label className="text-lg font-semibold text-foreground">Inquiry Message</Label>
+              <Label className="text-lg font-semibold text-foreground">Address</Label>
               <Textarea
-                value={form.notes}
-                onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                value={form.address}
+                onChange={(e) => setForm({ ...form, address: e.target.value })}
                 maxLength={500}
-                rows={5}
-                className="rounded-xl border-2 text-base px-4 py-3 min-h-[140px]"
+                rows={4}
+                className="rounded-xl border-2 text-base px-4 py-3 min-h-[120px]"
               />
             </div>
             <div className="flex justify-end pt-2">
