@@ -19,7 +19,7 @@ const Join = () => {
   const [batch, setBatch] = useState<BatchInfo | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [form, setForm] = useState({ name: "", email: "", phone: "", address: "", notes: "" });
+  const [form, setForm] = useState({ name: "", email: "", phone: "", address: "", notes: "", height: "", weight: "" });
 
   useEffect(() => {
     (async () => {
