@@ -119,14 +119,14 @@ const Customers = () => {
   const openAddCustomer = (batchId: string) => {
     setEditingCustId(null);
     setActiveBatchId(batchId);
-    setCustForm({ name: "", email: "", phone: "", address: "", notes: "" });
+    setCustForm({ name: "", email: "", phone: "", address: "", notes: "", height: "", weight: "" });
     setCustOpen(true);
   };
 
   const editCustomer = (c: Customer) => {
     setEditingCustId(c.id);
     setActiveBatchId(c.batch_id);
-    setCustForm({ name: c.name, email: c.email || "", phone: c.phone || "", address: c.address || "", notes: c.notes || "" });
+    setCustForm({ name: c.name, email: c.email || "", phone: c.phone || "", address: c.address || "", notes: c.notes || "", height: c.height_cm?.toString() || "", weight: c.weight_kg?.toString() || "" });
     setCustOpen(true);
   };
 
