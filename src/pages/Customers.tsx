@@ -34,7 +34,16 @@ interface Batch {
   start_date: string | null;
   fee: number;
   public_token: string;
+  required_fields: string[];
 }
+
+const FIELD_OPTIONS: { key: string; label: string }[] = [
+  { key: "name", label: "Name" },
+  { key: "email", label: "Email" },
+  { key: "phone", label: "Phone" },
+  { key: "address", label: "Address" },
+  { key: "notes", label: "Notes" },
+];
 
 const phoneRegex = /^[+\d][\d\s\-()]{6,19}$/;
 
