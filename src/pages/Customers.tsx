@@ -278,6 +278,10 @@ const Customers = () => {
               <div className="space-y-2"><Label>Email</Label><Input type="email" value={custForm.email} onChange={(e) => setCustForm({ ...custForm, email: e.target.value })} maxLength={255} /></div>
               <div className="space-y-2"><Label>Phone</Label><Input type="tel" value={custForm.phone} onChange={(e) => setCustForm({ ...custForm, phone: e.target.value })} maxLength={20} /></div>
             </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2"><Label>Height (cm)</Label><Input type="number" inputMode="decimal" min={30} max={272} step="0.1" value={custForm.height} onChange={(e) => setCustForm({ ...custForm, height: e.target.value })} /></div>
+              <div className="space-y-2"><Label>Weight (kg)</Label><Input type="number" inputMode="decimal" min={2} max={500} step="0.1" value={custForm.weight} onChange={(e) => setCustForm({ ...custForm, weight: e.target.value })} /></div>
+            </div>
             <div className="space-y-2"><Label>Address</Label><Textarea value={custForm.address} onChange={(e) => setCustForm({ ...custForm, address: e.target.value })} maxLength={300} rows={2} /></div>
             <div className="space-y-2"><Label>Notes</Label><Textarea value={custForm.notes} onChange={(e) => setCustForm({ ...custForm, notes: e.target.value })} maxLength={1000} /></div>
             <Button type="submit" className="w-full">{editingCustId ? "Update" : "Add"} Customer</Button>
