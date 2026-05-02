@@ -20,6 +20,8 @@ interface Customer {
   phone: string | null;
   address: string | null;
   notes: string | null;
+  height_cm: number | null;
+  weight_kg: number | null;
   batch_id: string | null;
 }
 
@@ -48,14 +50,14 @@ const Customers = () => {
   const [custOpen, setCustOpen] = useState(false);
   const [editingCustId, setEditingCustId] = useState<string | null>(null);
   const [activeBatchId, setActiveBatchId] = useState<string | null>(null);
-  const [custForm, setCustForm] = useState({ name: "", email: "", phone: "", address: "", notes: "" });
+  const [custForm, setCustForm] = useState({ name: "", email: "", phone: "", address: "", notes: "", height: "", weight: "" });
 
   // QR dialog
   const [qrBatch, setQrBatch] = useState<Batch | null>(null);
 
   const fetchCustomers = async () => {
     if (!user) return;
-    const { data } = await supabase.from("students").select("id,name,email,phone,address,notes,batch_id").eq("user_id", user.id).order("name");
+    const { data } = await supabase.from("students").select("id,name,email,phone,address,notes,height_cm,weight_kg,batch_id").eq("user_id", user.id).order("name");
     setCustomers((data as Customer[]) || []);
   };
   const fetchBatches = async () => {
@@ -117,14 +119,14 @@ const Customers = () => {
   const openAddCustomer = (batchId: string) => {
     setEditingCustId(null);
     setActiveBatchId(batchId);
-    setCustForm({ name: "", email: "", phone: "", address: "", notes: "" });
+    setCustForm({ name: "", email: "", phone: "", address: "", notes: "", height: "", weight: "" });
     setCustOpen(true);
   };
 
   const editCustomer = (c: Customer) => {
     setEditingCustId(c.id);
     setActiveBatchId(c.batch_id);
-    setCustForm({ name: c.name, email: c.email || "", phone: c.phone || "", address: c.address || "", notes: c.notes || "" });
+    setCustForm({ name: c.name, email: c.email || "", phone: c.phone || "", address: c.address || "", notes: c.notes || "", height: c.height_cm?.toString() || "", weight: c.weight_kg?.toString() || "" });
     setCustOpen(true);
   };
 
@@ -132,6 +134,10 @@ const Customers = () => {
     e.preventDefault();
     if (!user || !activeBatchId) return;
     if (custForm.phone && !phoneRegex.test(custForm.phone.trim())) { toast.error("Enter a valid phone"); return; }
+    const heightNum = custForm.height ? Number(custForm.height) : null;
+    const weightNum = custForm.weight ? Number(custForm.weight) : null;
+    if (heightNum !== null && (Number.isNaN(heightNum) || heightNum < 30 || heightNum > 272)) { toast.error("Enter a valid height in cm"); return; }
+    if (weightNum !== null && (Number.isNaN(weightNum) || weightNum < 2 || weightNum > 500)) { toast.error("Enter a valid weight in kg"); return; }
     const payload = {
       user_id: user.id,
       batch_id: activeBatchId,
@@ -140,6 +146,8 @@ const Customers = () => {
       phone: custForm.phone.trim() || null,
       address: custForm.address.trim() || null,
       notes: custForm.notes.trim() || null,
+      height_cm: heightNum,
+      weight_kg: weightNum,
     };
     const { error } = editingCustId
       ? await supabase.from("students").update(payload).eq("id", editingCustId)
@@ -235,6 +243,11 @@ const Customers = () => {
                             <p className="text-sm text-muted-foreground truncate">
                               {c.phone || "—"}{c.email ? ` · ${c.email}` : ""}
                             </p>
+                            {(c.height_cm || c.weight_kg) && (
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                {c.height_cm ? `${c.height_cm} cm` : ""}{c.height_cm && c.weight_kg ? " · " : ""}{c.weight_kg ? `${c.weight_kg} kg` : ""}
+                              </p>
+                            )}
                             {c.address && <p className="text-xs text-muted-foreground truncate mt-0.5">{c.address}</p>}
                           </div>
                           <div className="flex items-center gap-1 shrink-0">
@@ -264,6 +277,10 @@ const Customers = () => {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2"><Label>Email</Label><Input type="email" value={custForm.email} onChange={(e) => setCustForm({ ...custForm, email: e.target.value })} maxLength={255} /></div>
               <div className="space-y-2"><Label>Phone</Label><Input type="tel" value={custForm.phone} onChange={(e) => setCustForm({ ...custForm, phone: e.target.value })} maxLength={20} /></div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2"><Label>Height (cm)</Label><Input type="number" inputMode="decimal" min={30} max={272} step="0.1" value={custForm.height} onChange={(e) => setCustForm({ ...custForm, height: e.target.value })} /></div>
+              <div className="space-y-2"><Label>Weight (kg)</Label><Input type="number" inputMode="decimal" min={2} max={500} step="0.1" value={custForm.weight} onChange={(e) => setCustForm({ ...custForm, weight: e.target.value })} /></div>
             </div>
             <div className="space-y-2"><Label>Address</Label><Textarea value={custForm.address} onChange={(e) => setCustForm({ ...custForm, address: e.target.value })} maxLength={300} rows={2} /></div>
             <div className="space-y-2"><Label>Notes</Label><Textarea value={custForm.notes} onChange={(e) => setCustForm({ ...custForm, notes: e.target.value })} maxLength={1000} /></div>
