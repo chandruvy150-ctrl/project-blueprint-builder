@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Pencil, Trash2, Layers, UserPlus, QrCode, Copy, ArrowRightLeft } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { QRCodeSVG } from "qrcode.react";
@@ -33,7 +34,16 @@ interface Batch {
   start_date: string | null;
   fee: number;
   public_token: string;
+  required_fields: string[];
 }
+
+const FIELD_OPTIONS: { key: string; label: string }[] = [
+  { key: "name", label: "Name" },
+  { key: "email", label: "Email" },
+  { key: "phone", label: "Phone" },
+  { key: "address", label: "Address" },
+  { key: "notes", label: "Notes" },
+];
 
 const phoneRegex = /^[+\d][\d\s\-()]{6,19}$/;
 
@@ -45,7 +55,7 @@ const Customers = () => {
   // Batch dialog
   const [batchOpen, setBatchOpen] = useState(false);
   const [editingBatchId, setEditingBatchId] = useState<string | null>(null);
-  const [batchForm, setBatchForm] = useState({ name: "", description: "", start_date: "", fee: "" });
+  const [batchForm, setBatchForm] = useState<{ name: string; description: string; start_date: string; fee: string; required_fields: string[] }>({ name: "", description: "", start_date: "", fee: "", required_fields: ["name"] });
 
   // Customer dialog
   const [custOpen, setCustOpen] = useState(false);
@@ -84,12 +94,14 @@ const Customers = () => {
     if (!user) return;
     const name = batchForm.name.trim();
     if (!name) { toast.error("Name required"); return; }
+    const required_fields = Array.from(new Set(["name", ...batchForm.required_fields]));
     const payload = {
       user_id: user.id,
       name,
       description: batchForm.description.trim() || null,
       start_date: batchForm.start_date || null,
       fee: batchForm.fee ? Number(batchForm.fee) : 0,
+      required_fields,
     };
     const { error } = editingBatchId
       ? await supabase.from("batches").update(payload).eq("id", editingBatchId)
@@ -101,7 +113,7 @@ const Customers = () => {
 
   const editBatch = (b: Batch) => {
     setEditingBatchId(b.id);
-    setBatchForm({ name: b.name, description: b.description || "", start_date: b.start_date || "", fee: b.fee?.toString() || "" });
+    setBatchForm({ name: b.name, description: b.description || "", start_date: b.start_date || "", fee: b.fee?.toString() || "", required_fields: b.required_fields?.length ? b.required_fields : ["name"] });
     setBatchOpen(true);
   };
 
@@ -112,8 +124,18 @@ const Customers = () => {
   };
 
   const resetBatchForm = () => {
-    setBatchForm({ name: "", description: "", start_date: "", fee: "" });
+    setBatchForm({ name: "", description: "", start_date: "", fee: "", required_fields: ["name"] });
     setEditingBatchId(null); setBatchOpen(false);
+  };
+
+  const toggleRequiredField = (key: string) => {
+    if (key === "name") return;
+    setBatchForm((prev) => ({
+      ...prev,
+      required_fields: prev.required_fields.includes(key)
+        ? prev.required_fields.filter((k) => k !== key)
+        : [...prev.required_fields, key],
+    }));
   };
 
   // ---------- Customer CRUD ----------
@@ -193,6 +215,22 @@ const Customers = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2"><Label>Start date</Label><Input type="date" value={batchForm.start_date} onChange={(e) => setBatchForm({ ...batchForm, start_date: e.target.value })} /></div>
                 <div className="space-y-2"><Label>Fee (₹)</Label><Input type="number" min="0" step="0.01" value={batchForm.fee} onChange={(e) => setBatchForm({ ...batchForm, fee: e.target.value })} /></div>
+              </div>
+              <div className="space-y-2 rounded-md border p-3">
+                <Label className="text-sm font-medium">Required fields on registration form</Label>
+                <p className="text-xs text-muted-foreground">Choose which details students must fill before joining via the QR scanner.</p>
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  {FIELD_OPTIONS.map((f) => {
+                    const checked = batchForm.required_fields.includes(f.key);
+                    const locked = f.key === "name";
+                    return (
+                      <label key={f.key} className={`flex items-center gap-2 text-sm ${locked ? "opacity-70" : "cursor-pointer"}`}>
+                        <Checkbox checked={checked} disabled={locked} onCheckedChange={() => toggleRequiredField(f.key)} />
+                        <span>{f.label}{locked ? " (always)" : ""}</span>
+                      </label>
+                    );
+                  })}
+                </div>
               </div>
               <Button type="submit" className="w-full">{editingBatchId ? "Update" : "Add"} Batch</Button>
             </form>

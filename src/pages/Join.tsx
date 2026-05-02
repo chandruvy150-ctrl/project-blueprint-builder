@@ -9,9 +9,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { toast } from "sonner";
 import { Loader2, CheckCircle2 } from "lucide-react";
 
-interface BatchInfo { id: string; name: string; description: string | null; fee: number; start_date: string | null; }
+interface BatchInfo { id: string; name: string; description: string | null; fee: number; start_date: string | null; required_fields: string[] | null; }
 
 const phoneRegex = /^[+\d][\d\s\-()]{6,19}$/;
+const emailRegex = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
 const Join = () => {
   const { token } = useParams<{ token: string }>();
@@ -34,10 +35,23 @@ const Join = () => {
     })();
   }, [token]);
 
+  const required = new Set(batch?.required_fields ?? ["name"]);
+  const isReq = (key: string) => required.has(key);
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!token) return;
-    if (!form.name.trim()) { toast.error("Name is required"); return; }
+    const checks: { key: string; label: string; value: string }[] = [
+      { key: "name", label: "Name", value: form.name.trim() },
+      { key: "email", label: "Email", value: form.email.trim() },
+      { key: "phone", label: "Phone", value: form.phone.trim() },
+      { key: "address", label: "Address", value: form.address.trim() },
+      { key: "notes", label: "Notes", value: form.notes.trim() },
+    ];
+    for (const c of checks) {
+      if (isReq(c.key) && !c.value) { toast.error(`${c.label} is required`); return; }
+    }
+    if (form.email && !emailRegex.test(form.email.trim())) { toast.error("Enter a valid email"); return; }
     if (form.phone && !phoneRegex.test(form.phone.trim())) { toast.error("Enter a valid phone"); return; }
     setSubmitting(true);
     const { error } = await supabase.rpc("register_student_via_token", {
@@ -91,45 +105,61 @@ const Join = () => {
         <CardContent className="px-2 md:px-6">
           <form onSubmit={submit} className="space-y-7">
             <div className="space-y-3">
-              <Label className="text-lg font-semibold text-foreground">Name</Label>
+              <Label className="text-lg font-semibold text-foreground">Name {isReq("name") && <span className="text-destructive">*</span>}</Label>
               <Input
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
                 maxLength={100}
-                required
+                required={isReq("name")}
                 className="h-14 rounded-xl border-2 text-base px-4"
               />
             </div>
             <div className="space-y-3">
-              <Label className="text-lg font-semibold text-foreground">Email Address</Label>
+              <Label className="text-lg font-semibold text-foreground">Email Address {isReq("email") && <span className="text-destructive">*</span>}</Label>
               <Input
                 type="email"
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
                 maxLength={255}
+                required={isReq("email")}
                 className="h-14 rounded-xl border-2 text-base px-4"
               />
             </div>
             <div className="space-y-3">
-              <Label className="text-lg font-semibold text-foreground">Phone Number</Label>
+              <Label className="text-lg font-semibold text-foreground">Phone Number {isReq("phone") && <span className="text-destructive">*</span>}</Label>
               <Input
                 type="tel"
                 value={form.phone}
                 onChange={(e) => setForm({ ...form, phone: e.target.value })}
                 maxLength={20}
+                required={isReq("phone")}
                 className="h-14 rounded-xl border-2 text-base px-4"
               />
             </div>
             <div className="space-y-3">
-              <Label className="text-lg font-semibold text-foreground">Address</Label>
+              <Label className="text-lg font-semibold text-foreground">Address {isReq("address") && <span className="text-destructive">*</span>}</Label>
               <Textarea
                 value={form.address}
                 onChange={(e) => setForm({ ...form, address: e.target.value })}
                 maxLength={500}
                 rows={4}
+                required={isReq("address")}
                 className="rounded-xl border-2 text-base px-4 py-3 min-h-[120px]"
               />
             </div>
+            {isReq("notes") && (
+              <div className="space-y-3">
+                <Label className="text-lg font-semibold text-foreground">Notes <span className="text-destructive">*</span></Label>
+                <Textarea
+                  value={form.notes}
+                  onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                  maxLength={500}
+                  rows={3}
+                  required
+                  className="rounded-xl border-2 text-base px-4 py-3 min-h-[100px]"
+                />
+              </div>
+            )}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-2">
               <a
                 href="https://youtube.com/@clearpictures8918?si=NEN__ftlagnEfnpV"
