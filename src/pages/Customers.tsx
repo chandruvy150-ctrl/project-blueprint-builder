@@ -50,7 +50,7 @@ const Customers = () => {
   const [custOpen, setCustOpen] = useState(false);
   const [editingCustId, setEditingCustId] = useState<string | null>(null);
   const [activeBatchId, setActiveBatchId] = useState<string | null>(null);
-  const [custForm, setCustForm] = useState({ name: "", email: "", phone: "", address: "", notes: "" });
+  const [custForm, setCustForm] = useState({ name: "", email: "", phone: "", address: "", notes: "", height: "", weight: "" });
 
   // QR dialog
   const [qrBatch, setQrBatch] = useState<Batch | null>(null);
