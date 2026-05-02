@@ -55,7 +55,7 @@ const Customers = () => {
   // Batch dialog
   const [batchOpen, setBatchOpen] = useState(false);
   const [editingBatchId, setEditingBatchId] = useState<string | null>(null);
-  const [batchForm, setBatchForm] = useState({ name: "", description: "", start_date: "", fee: "" });
+  const [batchForm, setBatchForm] = useState<{ name: string; description: string; start_date: string; fee: string; required_fields: string[] }>({ name: "", description: "", start_date: "", fee: "", required_fields: ["name"] });
 
   // Customer dialog
   const [custOpen, setCustOpen] = useState(false);
