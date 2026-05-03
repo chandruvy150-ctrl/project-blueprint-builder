@@ -168,6 +168,34 @@ const Join = () => {
                 />
               </div>
             )}
+            {(isReq("height") || isReq("weight")) && (
+              <div className="grid grid-cols-2 gap-4">
+                {isReq("height") && (
+                  <div className="space-y-3">
+                    <Label className="text-lg font-semibold text-foreground">Height (cm) <span className="text-destructive">*</span></Label>
+                    <Input
+                      type="number" min={30} max={272} step="0.1"
+                      value={form.height}
+                      onChange={(e) => setForm({ ...form, height: e.target.value })}
+                      required
+                      className="h-14 rounded-xl border-2 text-base px-4"
+                    />
+                  </div>
+                )}
+                {isReq("weight") && (
+                  <div className="space-y-3">
+                    <Label className="text-lg font-semibold text-foreground">Weight (kg) <span className="text-destructive">*</span></Label>
+                    <Input
+                      type="number" min={2} max={500} step="0.1"
+                      value={form.weight}
+                      onChange={(e) => setForm({ ...form, weight: e.target.value })}
+                      required
+                      className="h-14 rounded-xl border-2 text-base px-4"
+                    />
+                  </div>
+                )}
+              </div>
+            )}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-2">
               <a
                 href="https://youtube.com/@clearpictures8918?si=NEN__ftlagnEfnpV"
