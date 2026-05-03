@@ -20,7 +20,7 @@ const Join = () => {
   const [batch, setBatch] = useState<BatchInfo | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [form, setForm] = useState({ name: "", email: "", phone: "", address: "", notes: "" });
+  const [form, setForm] = useState({ name: "", email: "", phone: "", address: "", notes: "", height: "", weight: "" });
 
   useEffect(() => {
     (async () => {
@@ -47,12 +47,18 @@ const Join = () => {
       { key: "phone", label: "Phone", value: form.phone.trim() },
       { key: "address", label: "Address", value: form.address.trim() },
       { key: "notes", label: "Notes", value: form.notes.trim() },
+      { key: "height", label: "Height", value: form.height.trim() },
+      { key: "weight", label: "Weight", value: form.weight.trim() },
     ];
     for (const c of checks) {
       if (isReq(c.key) && !c.value) { toast.error(`${c.label} is required`); return; }
     }
     if (form.email && !emailRegex.test(form.email.trim())) { toast.error("Enter a valid email"); return; }
     if (form.phone && !phoneRegex.test(form.phone.trim())) { toast.error("Enter a valid phone"); return; }
+    const heightNum = form.height ? Number(form.height) : null;
+    const weightNum = form.weight ? Number(form.weight) : null;
+    if (heightNum !== null && (Number.isNaN(heightNum) || heightNum < 30 || heightNum > 272)) { toast.error("Enter a valid height in cm"); return; }
+    if (weightNum !== null && (Number.isNaN(weightNum) || weightNum < 2 || weightNum > 500)) { toast.error("Enter a valid weight in kg"); return; }
     setSubmitting(true);
     const { error } = await supabase.rpc("register_student_via_token", {
       _token: token,
@@ -61,6 +67,8 @@ const Join = () => {
       _phone: form.phone,
       _address: form.address,
       _notes: form.notes,
+      _height_cm: heightNum,
+      _weight_kg: weightNum,
     });
     setSubmitting(false);
     if (error) { toast.error(error.message); return; }
@@ -158,6 +166,34 @@ const Join = () => {
                   required
                   className="rounded-xl border-2 text-base px-4 py-3 min-h-[100px]"
                 />
+              </div>
+            )}
+            {(isReq("height") || isReq("weight")) && (
+              <div className="grid grid-cols-2 gap-4">
+                {isReq("height") && (
+                  <div className="space-y-3">
+                    <Label className="text-lg font-semibold text-foreground">Height (cm) <span className="text-destructive">*</span></Label>
+                    <Input
+                      type="number" min={30} max={272} step="0.1"
+                      value={form.height}
+                      onChange={(e) => setForm({ ...form, height: e.target.value })}
+                      required
+                      className="h-14 rounded-xl border-2 text-base px-4"
+                    />
+                  </div>
+                )}
+                {isReq("weight") && (
+                  <div className="space-y-3">
+                    <Label className="text-lg font-semibold text-foreground">Weight (kg) <span className="text-destructive">*</span></Label>
+                    <Input
+                      type="number" min={2} max={500} step="0.1"
+                      value={form.weight}
+                      onChange={(e) => setForm({ ...form, weight: e.target.value })}
+                      required
+                      className="h-14 rounded-xl border-2 text-base px-4"
+                    />
+                  </div>
+                )}
               </div>
             )}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-2">

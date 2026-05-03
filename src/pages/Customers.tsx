@@ -43,6 +43,8 @@ const FIELD_OPTIONS: { key: string; label: string }[] = [
   { key: "phone", label: "Phone" },
   { key: "address", label: "Address" },
   { key: "notes", label: "Notes" },
+  { key: "height", label: "Height (cm)" },
+  { key: "weight", label: "Weight (kg)" },
 ];
 
 const phoneRegex = /^[+\d][\d\s\-()]{6,19}$/;
