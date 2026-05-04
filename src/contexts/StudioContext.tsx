@@ -7,6 +7,7 @@ interface StudioContextValue {
   logoUrl: string | null;
   backgroundUrl: string | null;
   paymentsPinSet: boolean;
+  appLockPinSet: boolean;
   ownerId: string | null;
   isOwner: boolean;
   loading: boolean;
@@ -18,6 +19,8 @@ interface StudioContextValue {
   removeBackground: () => Promise<void>;
   setPaymentsPin: (pin: string | null) => Promise<void>;
   verifyPaymentsPin: (pin: string) => Promise<boolean>;
+  setAppLockPin: (pin: string | null) => Promise<void>;
+  verifyAppLockPin: (pin: string) => Promise<boolean>;
 }
 
 const StudioContext = createContext<StudioContextValue | undefined>(undefined);
