@@ -19,8 +19,8 @@ const PRESET_WALLPAPERS = [
 
 const Settings = () => {
   const {
-    studioName, logoUrl, backgroundUrl, isOwner, paymentsPinSet,
-    uploadLogo, uploadBackground, setBackgroundFromUrl, removeBackground, setPaymentsPin,
+    studioName, logoUrl, backgroundUrl, isOwner, paymentsPinSet, appLockPinSet,
+    uploadLogo, uploadBackground, setBackgroundFromUrl, removeBackground, setPaymentsPin, setAppLockPin,
   } = useStudio();
   const { theme, setTheme } = useTheme();
   const logoRef = useRef<HTMLInputElement>(null);
@@ -28,6 +28,25 @@ const Settings = () => {
   const [pin, setPin] = useState("");
   const [confirmPin, setConfirmPin] = useState("");
   const [savingPin, setSavingPin] = useState(false);
+  const [appPin, setAppPin] = useState("");
+  const [appConfirm, setAppConfirm] = useState("");
+  const [savingAppPin, setSavingAppPin] = useState(false);
+
+  const handleAppPinSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!/^\d{4,6}$/.test(appPin)) { toast.error("PIN must be 4–6 digits"); return; }
+    if (appPin !== appConfirm) { toast.error("PINs do not match"); return; }
+    setSavingAppPin(true);
+    await setAppLockPin(appPin);
+    setSavingAppPin(false);
+    setAppPin(""); setAppConfirm("");
+    toast.success("App lock PIN saved");
+  };
+
+  const handleAppPinClear = async () => {
+    await setAppLockPin(null);
+    toast.success("App lock removed");
+  };
 
   if (!isOwner) {
     return (
