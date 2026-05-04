@@ -280,6 +280,49 @@ const Settings = () => {
           </form>
         </CardContent>
       </Card>
+
+      {/* App Lock PIN */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="font-display flex items-center gap-2"><Lock className="h-5 w-5" /> App Lock PIN</CardTitle>
+          <CardDescription>
+            {appLockPinSet
+              ? "App lock is on. After signing in, this PIN is required to open the app."
+              : "Set a 4–6 digit PIN that will be required after sign-in to open the app."}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {appLockPinSet && (
+            <div className="flex items-center gap-2 text-sm text-foreground bg-muted/50 rounded-lg px-3 py-2">
+              <ShieldCheck className="h-4 w-4 text-primary" /> App is locked after sign-in
+            </div>
+          )}
+          <form onSubmit={handleAppPinSave} className="space-y-3">
+            <div className="grid sm:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>{appLockPinSet ? "New PIN" : "PIN"}</Label>
+                <Input type="password" inputMode="numeric" autoComplete="new-password" maxLength={6}
+                  value={appPin} onChange={(e) => setAppPin(e.target.value.replace(/\D/g, ""))} placeholder="4–6 digits" />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Confirm PIN</Label>
+                <Input type="password" inputMode="numeric" autoComplete="new-password" maxLength={6}
+                  value={appConfirm} onChange={(e) => setAppConfirm(e.target.value.replace(/\D/g, ""))} placeholder="Repeat PIN" />
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button type="submit" disabled={savingAppPin}>
+                {savingAppPin ? "Saving…" : appLockPinSet ? "Update PIN" : "Set PIN"}
+              </Button>
+              {appLockPinSet && (
+                <Button type="button" variant="ghost" onClick={handleAppPinClear} className="text-destructive hover:text-destructive">
+                  Remove PIN
+                </Button>
+              )}
+            </div>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 };
