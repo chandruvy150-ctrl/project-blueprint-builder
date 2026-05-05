@@ -47,7 +47,17 @@ const Payments = () => {
       supabase.from("student_payments").select("*").eq("user_id", user.id).order("paid_on", { ascending: false }),
     ]);
     setCustomers((cust as Customer[]) || []);
-    setPayments((pays as Payment[]) || []);
+    const list = ((pays as any[]) || []) as Payment[];
+    // Decrypt notes_encrypted with cached E2E key when available
+    const key = await getCachedKey();
+    for (const p of list) {
+      if (p.notes_encrypted && key) {
+        p.notes_plain = await decryptString(p.notes_encrypted, key);
+      } else {
+        p.notes_plain = p.notes;
+      }
+    }
+    setPayments(list);
   };
   useEffect(() => { fetchAll(); }, [user]);
 
@@ -72,6 +82,13 @@ const Payments = () => {
     const amount = parseFloat(form.amount);
     if (!form.student_id) { toast.error("Pick a customer"); return; }
     if (!amount || amount <= 0) { toast.error("Enter a valid amount"); return; }
+    const noteText = form.notes.trim();
+    let notes_plain: string | null = noteText || null;
+    let notes_encrypted: string | null = null;
+    if (noteText) {
+      const enc = await encryptString(noteText);
+      if (enc) { notes_encrypted = enc; notes_plain = null; }
+    }
     const { error } = await supabase.from("student_payments").insert({
       student_id: form.student_id,
       user_id: user.id,
@@ -80,8 +97,9 @@ const Payments = () => {
       method: form.method,
       plan: form.plan,
       valid_until: form.valid_until || null,
-      notes: form.notes.trim() || null,
-    });
+      notes: notes_plain,
+      notes_encrypted,
+    } as any);
     if (error) { toast.error(error.message); return; }
     toast.success("Payment recorded");
     setForm({ ...form, amount: "", notes: "" });
