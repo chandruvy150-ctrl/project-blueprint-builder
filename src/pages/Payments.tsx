@@ -8,8 +8,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Trash2, IndianRupee, ChevronDown, ChevronRight } from "lucide-react";
+import { Plus, Trash2, IndianRupee, ChevronDown, ChevronRight, Lock as LockIcon } from "lucide-react";
 import { toast } from "sonner";
+import { encryptString, decryptString, getCachedKey } from "@/lib/crypto";
 
 interface Customer { id: string; name: string; phone: string | null; }
 interface Payment {
@@ -21,6 +22,8 @@ interface Payment {
   plan: string;
   valid_until: string | null;
   notes: string | null;
+  notes_encrypted: string | null;
+  notes_plain?: string | null;
 }
 
 const paymentMethods = ["cash", "upi", "card", "bank-transfer", "other"];
