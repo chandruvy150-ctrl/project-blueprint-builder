@@ -390,8 +390,8 @@ const Settings = () => {
           <CardTitle className="font-display flex items-center gap-2"><Lock className="h-5 w-5" /> App Lock PIN</CardTitle>
           <CardDescription>
             {appLockPinSet
-              ? "App lock is on. After signing in, this PIN is required to open the app."
-              : "Set a 4–6 digit PIN that will be required after sign-in to open the app."}
+              ? "App lock is on. This PIN is required after sign-in and unlocks end-to-end encrypted notes."
+              : "Set a 4–6 digit PIN required after sign-in. It also derives the key for end-to-end encrypted payment notes."}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
