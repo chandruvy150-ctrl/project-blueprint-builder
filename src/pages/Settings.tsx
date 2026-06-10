@@ -77,15 +77,6 @@ const Settings = () => {
     setAppPin(""); setAppConfirm("");
     toast.success("App lock PIN saved");
   };
-    e.preventDefault();
-    if (!/^\d{4,6}$/.test(appPin)) { toast.error("PIN must be 4–6 digits"); return; }
-    if (appPin !== appConfirm) { toast.error("PINs do not match"); return; }
-    setSavingAppPin(true);
-    await setAppLockPin(appPin);
-    setSavingAppPin(false);
-    setAppPin(""); setAppConfirm("");
-    toast.success("App lock PIN saved");
-  };
 
   const handleAppPinClear = async () => {
     await setAppLockPin(null);
