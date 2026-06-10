@@ -1,11 +1,13 @@
 import { useRef, useState } from "react";
 import { useStudio } from "@/contexts/StudioContext";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Image as ImageIcon, Upload, Trash2, Lock, ShieldCheck, Sun, Moon, Check } from "lucide-react";
+import { Image as ImageIcon, Upload, Trash2, Lock, ShieldCheck, Sun, Moon, Check, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 
 const PRESET_WALLPAPERS = [
@@ -27,6 +29,7 @@ const Settings = () => {
     setAppLockPin,
   } = useStudio();
   const { theme, setTheme } = useTheme();
+  const { user } = useAuth();
   const logoRef = useRef<HTMLInputElement>(null);
   const bgRef = useRef<HTMLInputElement>(null);
   const [pin, setPin] = useState("");
@@ -35,6 +38,34 @@ const Settings = () => {
   const [appPin, setAppPin] = useState("");
   const [appConfirm, setAppConfirm] = useState("");
   const [savingAppPin, setSavingAppPin] = useState(false);
+
+  const [currentPwd, setCurrentPwd] = useState("");
+  const [newPwd, setNewPwd] = useState("");
+  const [confirmPwd, setConfirmPwd] = useState("");
+  const [savingPwd, setSavingPwd] = useState(false);
+
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user?.email) return;
+    if (newPwd.length < 8) { toast.error("Password must be at least 8 characters"); return; }
+    if (newPwd !== confirmPwd) { toast.error("Passwords do not match"); return; }
+    setSavingPwd(true);
+    try {
+      const { error: signErr } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: currentPwd,
+      });
+      if (signErr) throw new Error("Current password is incorrect");
+      const { error: updErr } = await supabase.auth.updateUser({ password: newPwd });
+      if (updErr) throw updErr;
+      toast.success("Password updated");
+      setCurrentPwd(""); setNewPwd(""); setConfirmPwd("");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to update password");
+    } finally {
+      setSavingPwd(false);
+    }
+  };
 
   const handleAppPinSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -323,6 +354,39 @@ const Settings = () => {
                 </Button>
               )}
             </div>
+          </form>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="font-display flex items-center gap-2"><KeyRound className="h-5 w-5" /> Account Password</CardTitle>
+          <CardDescription>
+            Change the password for your owner account. You'll need your current password to confirm.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handlePasswordChange} className="space-y-3">
+            <div className="space-y-1.5">
+              <Label>Current password</Label>
+              <Input type="password" autoComplete="current-password"
+                value={currentPwd} onChange={(e) => setCurrentPwd(e.target.value)} placeholder="••••••••" />
+            </div>
+            <div className="grid sm:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>New password</Label>
+                <Input type="password" autoComplete="new-password" minLength={8}
+                  value={newPwd} onChange={(e) => setNewPwd(e.target.value)} placeholder="At least 8 characters" />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Confirm new password</Label>
+                <Input type="password" autoComplete="new-password" minLength={8}
+                  value={confirmPwd} onChange={(e) => setConfirmPwd(e.target.value)} placeholder="Repeat password" />
+              </div>
+            </div>
+            <Button type="submit" disabled={savingPwd || !currentPwd || !newPwd || !confirmPwd}>
+              {savingPwd ? "Updating…" : "Update password"}
+            </Button>
           </form>
         </CardContent>
       </Card>
