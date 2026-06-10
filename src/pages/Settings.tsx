@@ -357,6 +357,39 @@ const Settings = () => {
           </form>
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="font-display flex items-center gap-2"><KeyRound className="h-5 w-5" /> Account Password</CardTitle>
+          <CardDescription>
+            Change the password for your owner account. You'll need your current password to confirm.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handlePasswordChange} className="space-y-3">
+            <div className="space-y-1.5">
+              <Label>Current password</Label>
+              <Input type="password" autoComplete="current-password"
+                value={currentPwd} onChange={(e) => setCurrentPwd(e.target.value)} placeholder="••••••••" />
+            </div>
+            <div className="grid sm:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>New password</Label>
+                <Input type="password" autoComplete="new-password" minLength={8}
+                  value={newPwd} onChange={(e) => setNewPwd(e.target.value)} placeholder="At least 8 characters" />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Confirm new password</Label>
+                <Input type="password" autoComplete="new-password" minLength={8}
+                  value={confirmPwd} onChange={(e) => setConfirmPwd(e.target.value)} placeholder="Repeat password" />
+              </div>
+            </div>
+            <Button type="submit" disabled={savingPwd || !currentPwd || !newPwd || !confirmPwd}>
+              {savingPwd ? "Updating…" : "Update password"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 };
