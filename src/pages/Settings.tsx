@@ -1,11 +1,13 @@
 import { useRef, useState } from "react";
 import { useStudio } from "@/contexts/StudioContext";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Image as ImageIcon, Upload, Trash2, Lock, ShieldCheck, Sun, Moon, Check } from "lucide-react";
+import { Image as ImageIcon, Upload, Trash2, Lock, ShieldCheck, Sun, Moon, Check, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 
 const PRESET_WALLPAPERS = [
