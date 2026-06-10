@@ -337,6 +337,30 @@ export type Database = {
         }
         Relationships: []
       }
+      settings: {
+        Row: {
+          email: string | null
+          id: string
+          studio_name: string | null
+          updated_at: string | null
+          username: string | null
+        }
+        Insert: {
+          email?: string | null
+          id: string
+          studio_name?: string | null
+          updated_at?: string | null
+          username?: string | null
+        }
+        Update: {
+          email?: string | null
+          id?: string
+          studio_name?: string | null
+          updated_at?: string | null
+          username?: string | null
+        }
+        Relationships: []
+      }
       staff_invitations: {
         Row: {
           accepted_at: string | null
