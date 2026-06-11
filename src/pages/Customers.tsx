@@ -75,8 +75,9 @@ const Customers = () => {
 
   const fetchCustomers = async () => {
     if (!user) return;
-    const { data } = await supabase.from("students").select("id,name,email,phone,address,notes,height_cm,weight_kg,batch_id").eq("user_id", user.id).order("name");
-    setCustomers((data as Customer[]) || []);
+    const { data } = await supabase.from("students").select("id,name,email,phone,address,notes,height_cm,weight_kg,batch_id,custom_data").eq("user_id", user.id).order("name");
+    const rows = (data || []).map((c: any) => ({ ...c, custom_data: (c.custom_data && typeof c.custom_data === "object") ? c.custom_data : {} })) as Customer[];
+    setCustomers(rows);
   };
   const fetchBatches = async () => {
     if (!user) return;
