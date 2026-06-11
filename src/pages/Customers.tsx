@@ -247,7 +247,7 @@ const Customers = () => {
           <DialogTrigger asChild>
             <Button><Plus className="h-4 w-4 mr-2" />Add Batch</Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="font-display">{editingBatchId ? "Edit" : "Add"} Batch</DialogTitle>
               <DialogDescription>Batch details (owner-only).</DialogDescription>
@@ -275,6 +275,49 @@ const Customers = () => {
                   })}
                 </div>
               </div>
+
+              <div className="space-y-3 rounded-md border p-3">
+                <div>
+                  <Label className="text-sm font-medium">Other (Custom Fields)</Label>
+                  <p className="text-xs text-muted-foreground">Add your own questions like Emergency Contact, Blood Group, Occupation, etc.</p>
+                </div>
+                {batchForm.custom_fields.length === 0 ? (
+                  <p className="text-xs italic text-muted-foreground">No custom fields yet.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {batchForm.custom_fields.map((cf) => (
+                      <div key={cf.id} className="rounded-md border bg-muted/30 p-2 space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Input
+                            value={cf.name}
+                            onChange={(e) => updateCustomField(cf.id, { name: e.target.value })}
+                            placeholder="Enter custom field name"
+                            maxLength={60}
+                            className="flex-1 h-9"
+                          />
+                          <button type="button" onClick={() => removeCustomField(cf.id)} className="p-2 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10" title="Delete field">
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <Switch checked={cf.required} onCheckedChange={(v) => updateCustomField(cf.id, { required: !!v })} />
+                            <span>Required</span>
+                          </label>
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <Switch checked={cf.enabled} onCheckedChange={(v) => updateCustomField(cf.id, { enabled: !!v })} />
+                            <span>Enabled</span>
+                          </label>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <Button type="button" variant="outline" size="sm" onClick={addCustomField}>
+                  <Plus className="h-4 w-4 mr-2" />Add Custom Field
+                </Button>
+              </div>
+
               <Button type="submit" className="w-full">{editingBatchId ? "Update" : "Add"} Batch</Button>
             </form>
           </DialogContent>
