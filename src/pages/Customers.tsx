@@ -105,6 +105,10 @@ const Customers = () => {
     const name = batchForm.name.trim();
     if (!name) { toast.error("Name required"); return; }
     const required_fields = Array.from(new Set(["name", ...batchForm.required_fields]));
+    const cleaned_custom = batchForm.custom_fields
+      .map((f) => ({ ...f, name: f.name.trim() }))
+      .filter((f) => f.name.length > 0);
+    if (cleaned_custom.some((f) => f.name.length > 60)) { toast.error("Custom field names must be 60 characters or less"); return; }
     const payload = {
       user_id: user.id,
       name,
@@ -112,6 +116,7 @@ const Customers = () => {
       start_date: batchForm.start_date || null,
       fee: batchForm.fee ? Number(batchForm.fee) : 0,
       required_fields,
+      custom_fields: cleaned_custom as any,
     };
     const { error } = editingBatchId
       ? await supabase.from("batches").update(payload).eq("id", editingBatchId)
@@ -123,7 +128,11 @@ const Customers = () => {
 
   const editBatch = (b: Batch) => {
     setEditingBatchId(b.id);
-    setBatchForm({ name: b.name, description: b.description || "", start_date: b.start_date || "", fee: b.fee?.toString() || "", required_fields: b.required_fields?.length ? b.required_fields : ["name"] });
+    setBatchForm({
+      name: b.name, description: b.description || "", start_date: b.start_date || "",
+      fee: b.fee?.toString() || "", required_fields: b.required_fields?.length ? b.required_fields : ["name"],
+      custom_fields: Array.isArray(b.custom_fields) ? b.custom_fields : [],
+    });
     setBatchOpen(true);
   };
 
@@ -134,7 +143,7 @@ const Customers = () => {
   };
 
   const resetBatchForm = () => {
-    setBatchForm({ name: "", description: "", start_date: "", fee: "", required_fields: ["name"] });
+    setBatchForm({ name: "", description: "", start_date: "", fee: "", required_fields: ["name"], custom_fields: [] });
     setEditingBatchId(null); setBatchOpen(false);
   };
 
@@ -148,11 +157,25 @@ const Customers = () => {
     }));
   };
 
+  const addCustomField = () => {
+    setBatchForm((prev) => ({
+      ...prev,
+      custom_fields: [...prev.custom_fields, { id: crypto.randomUUID(), name: "", required: false, enabled: true }],
+    }));
+  };
+  const updateCustomField = (id: string, patch: Partial<CustomField>) => {
+    setBatchForm((prev) => ({ ...prev, custom_fields: prev.custom_fields.map((f) => f.id === id ? { ...f, ...patch } : f) }));
+  };
+  const removeCustomField = (id: string) => {
+    setBatchForm((prev) => ({ ...prev, custom_fields: prev.custom_fields.filter((f) => f.id !== id) }));
+  };
+
   // ---------- Customer CRUD ----------
   const openAddCustomer = (batchId: string) => {
     setEditingCustId(null);
     setActiveBatchId(batchId);
     setCustForm({ name: "", email: "", phone: "", address: "", notes: "", height: "", weight: "" });
+    setCustCustom({});
     setCustOpen(true);
   };
 
@@ -160,6 +183,7 @@ const Customers = () => {
     setEditingCustId(c.id);
     setActiveBatchId(c.batch_id);
     setCustForm({ name: c.name, email: c.email || "", phone: c.phone || "", address: c.address || "", notes: c.notes || "", height: c.height_cm?.toString() || "", weight: c.weight_kg?.toString() || "" });
+    setCustCustom((c.custom_data && typeof c.custom_data === "object") ? { ...c.custom_data } : {});
     setCustOpen(true);
   };
 
