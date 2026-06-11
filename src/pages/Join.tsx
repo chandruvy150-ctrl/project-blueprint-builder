@@ -211,6 +211,18 @@ const Join = () => {
                 )}
               </div>
             )}
+            {activeCustomFields.map((f) => (
+              <div key={f.id} className="space-y-3">
+                <Label className="text-lg font-semibold text-foreground">{f.name} {f.required && <span className="text-destructive">*</span>}</Label>
+                <Input
+                  value={customData[f.id] || ""}
+                  onChange={(e) => setCustomData((prev) => ({ ...prev, [f.id]: e.target.value }))}
+                  maxLength={500}
+                  required={f.required}
+                  className="h-14 rounded-xl border-2 text-base px-4"
+                />
+              </div>
+            ))}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-2">
               <a
                 href="https://youtube.com/@clearpictures8918?si=NEN__ftlagnEfnpV"
