@@ -195,6 +195,14 @@ const Customers = () => {
     const weightNum = custForm.weight ? Number(custForm.weight) : null;
     if (heightNum !== null && (Number.isNaN(heightNum) || heightNum < 30 || heightNum > 272)) { toast.error("Enter a valid height in cm"); return; }
     if (weightNum !== null && (Number.isNaN(weightNum) || weightNum < 2 || weightNum > 500)) { toast.error("Enter a valid weight in kg"); return; }
+    const activeBatch = batches.find((b) => b.id === activeBatchId);
+    const activeCustomFields = (activeBatch?.custom_fields || []).filter((f) => f.enabled !== false);
+    const customDataClean: Record<string, string> = {};
+    for (const f of activeCustomFields) {
+      const v = (custCustom[f.id] || "").trim();
+      if (f.required && !v) { toast.error(`${f.name} is required`); return; }
+      if (v) customDataClean[f.id] = v.slice(0, 500);
+    }
     const payload = {
       user_id: user.id,
       batch_id: activeBatchId,
@@ -205,13 +213,14 @@ const Customers = () => {
       notes: custForm.notes.trim() || null,
       height_cm: heightNum,
       weight_kg: weightNum,
+      custom_data: customDataClean as any,
     };
     const { error } = editingCustId
       ? await supabase.from("students").update(payload).eq("id", editingCustId)
       : await supabase.from("students").insert(payload);
     if (error) { toast.error(error.message); return; }
     toast.success(editingCustId ? "Customer updated" : "Customer added");
-    setCustOpen(false); setEditingCustId(null); setActiveBatchId(null);
+    setCustOpen(false); setEditingCustId(null); setActiveBatchId(null); setCustCustom({});
     fetchCustomers();
   };
 
