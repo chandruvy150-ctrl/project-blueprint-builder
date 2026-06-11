@@ -17,6 +17,7 @@ export type Database = {
       batches: {
         Row: {
           created_at: string
+          custom_fields: Json
           description: string | null
           fee: number
           id: string
@@ -29,6 +30,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          custom_fields?: Json
           description?: string | null
           fee?: number
           id?: string
@@ -41,6 +43,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          custom_fields?: Json
           description?: string | null
           fee?: number
           id?: string
@@ -432,6 +435,7 @@ export type Database = {
           address: string | null
           batch_id: string | null
           created_at: string
+          custom_data: Json
           email: string | null
           height_cm: number | null
           id: string
@@ -448,6 +452,7 @@ export type Database = {
           address?: string | null
           batch_id?: string | null
           created_at?: string
+          custom_data?: Json
           email?: string | null
           height_cm?: number | null
           id?: string
@@ -464,6 +469,7 @@ export type Database = {
           address?: string | null
           batch_id?: string | null
           created_at?: string
+          custom_data?: Json
           email?: string | null
           height_cm?: number | null
           id?: string
@@ -566,6 +572,7 @@ export type Database = {
       get_batch_by_token: {
         Args: { _token: string }
         Returns: {
+          custom_fields: Json
           description: string
           fee: number
           id: string
@@ -634,6 +641,20 @@ export type Database = {
         | {
             Args: {
               _address: string
+              _email: string
+              _height_cm?: number
+              _name: string
+              _notes: string
+              _phone: string
+              _token: string
+              _weight_kg?: number
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              _address: string
+              _custom_data?: Json
               _email: string
               _height_cm?: number
               _name: string
