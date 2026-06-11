@@ -81,7 +81,8 @@ const Customers = () => {
   const fetchBatches = async () => {
     if (!user) return;
     const { data } = await supabase.from("batches").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
-    setBatches((data as Batch[]) || []);
+    const rows = (data || []).map((b: any) => ({ ...b, custom_fields: Array.isArray(b.custom_fields) ? b.custom_fields : [] })) as Batch[];
+    setBatches(rows);
   };
   useEffect(() => { fetchCustomers(); fetchBatches(); }, [user]);
 
