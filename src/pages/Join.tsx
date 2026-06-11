@@ -28,10 +28,12 @@ const Join = () => {
     (async () => {
       if (!token) return;
       const { data, error } = await supabase.rpc("get_batch_by_token", { _token: token });
-      if (error || !data || (data as BatchInfo[]).length === 0) {
+      const rows = (data || []) as any[];
+      if (error || rows.length === 0) {
         setBatch(null);
       } else {
-        setBatch((data as BatchInfo[])[0]);
+        const b = rows[0];
+        setBatch({ ...b, custom_fields: Array.isArray(b.custom_fields) ? b.custom_fields : [] } as BatchInfo);
       }
       setLoading(false);
     })();
@@ -39,6 +41,7 @@ const Join = () => {
 
   const required = new Set(batch?.required_fields ?? ["name"]);
   const isReq = (key: string) => required.has(key);
+  const activeCustomFields = (batch?.custom_fields || []).filter((f) => f.enabled !== false);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,6 +64,14 @@ const Join = () => {
     const weightNum = form.weight ? Number(form.weight) : null;
     if (heightNum !== null && (Number.isNaN(heightNum) || heightNum < 30 || heightNum > 272)) { toast.error("Enter a valid height in cm"); return; }
     if (weightNum !== null && (Number.isNaN(weightNum) || weightNum < 2 || weightNum > 500)) { toast.error("Enter a valid weight in kg"); return; }
+
+    const customClean: Record<string, string> = {};
+    for (const f of activeCustomFields) {
+      const v = (customData[f.id] || "").trim();
+      if (f.required && !v) { toast.error(`${f.name} is required`); return; }
+      if (v) customClean[f.id] = v.slice(0, 500);
+    }
+
     setSubmitting(true);
     const { error } = await supabase.rpc("register_student_via_token", {
       _token: token,
@@ -71,6 +82,7 @@ const Join = () => {
       _notes: form.notes,
       _height_cm: heightNum,
       _weight_kg: weightNum,
+      _custom_data: customClean,
     });
     setSubmitting(false);
     if (error) { toast.error(error.message); return; }
