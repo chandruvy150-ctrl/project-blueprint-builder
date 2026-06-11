@@ -419,8 +419,8 @@ const Customers = () => {
       )}
 
       {/* Customer dialog */}
-      <Dialog open={custOpen} onOpenChange={(v) => { if (!v) { setCustOpen(false); setEditingCustId(null); setActiveBatchId(null); } }}>
-        <DialogContent>
+      <Dialog open={custOpen} onOpenChange={(v) => { if (!v) { setCustOpen(false); setEditingCustId(null); setActiveBatchId(null); setCustCustom({}); } }}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="font-display">{editingCustId ? "Edit" : "Add"} Customer</DialogTitle>
             <DialogDescription>{batches.find((b) => b.id === activeBatchId)?.name}</DialogDescription>
@@ -437,6 +437,17 @@ const Customers = () => {
             </div>
             <div className="space-y-2"><Label>Address</Label><Textarea value={custForm.address} onChange={(e) => setCustForm({ ...custForm, address: e.target.value })} maxLength={300} rows={2} /></div>
             <div className="space-y-2"><Label>Notes</Label><Textarea value={custForm.notes} onChange={(e) => setCustForm({ ...custForm, notes: e.target.value })} maxLength={1000} /></div>
+            {batches.find((b) => b.id === activeBatchId)?.custom_fields?.filter((f) => f.enabled !== false).map((f) => (
+              <div key={f.id} className="space-y-2">
+                <Label>{f.name} {f.required && <span className="text-destructive">*</span>}</Label>
+                <Input
+                  value={custCustom[f.id] || ""}
+                  onChange={(e) => setCustCustom((prev) => ({ ...prev, [f.id]: e.target.value }))}
+                  maxLength={500}
+                  required={f.required}
+                />
+              </div>
+            ))}
             <Button type="submit" className="w-full">{editingCustId ? "Update" : "Add"} Customer</Button>
           </form>
         </DialogContent>
