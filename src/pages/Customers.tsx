@@ -9,7 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Textarea } from "@/components/ui/textarea";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Pencil, Trash2, Layers, UserPlus, QrCode, Copy, ArrowRightLeft } from "lucide-react";
+import { Plus, Pencil, Trash2, Layers, UserPlus, QrCode, Copy, ArrowRightLeft, X } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
@@ -25,7 +26,10 @@ interface Customer {
   height_cm: number | null;
   weight_kg: number | null;
   batch_id: string | null;
+  custom_data: Record<string, string> | null;
 }
+
+interface CustomField { id: string; name: string; required: boolean; enabled: boolean; }
 
 interface Batch {
   id: string;
@@ -35,6 +39,7 @@ interface Batch {
   fee: number;
   public_token: string;
   required_fields: string[];
+  custom_fields: CustomField[];
 }
 
 const FIELD_OPTIONS: { key: string; label: string }[] = [
@@ -57,26 +62,29 @@ const Customers = () => {
   // Batch dialog
   const [batchOpen, setBatchOpen] = useState(false);
   const [editingBatchId, setEditingBatchId] = useState<string | null>(null);
-  const [batchForm, setBatchForm] = useState<{ name: string; description: string; start_date: string; fee: string; required_fields: string[] }>({ name: "", description: "", start_date: "", fee: "", required_fields: ["name"] });
+  const [batchForm, setBatchForm] = useState<{ name: string; description: string; start_date: string; fee: string; required_fields: string[]; custom_fields: CustomField[] }>({ name: "", description: "", start_date: "", fee: "", required_fields: ["name"], custom_fields: [] });
 
   // Customer dialog
   const [custOpen, setCustOpen] = useState(false);
   const [editingCustId, setEditingCustId] = useState<string | null>(null);
   const [activeBatchId, setActiveBatchId] = useState<string | null>(null);
   const [custForm, setCustForm] = useState({ name: "", email: "", phone: "", address: "", notes: "", height: "", weight: "" });
+  const [custCustom, setCustCustom] = useState<Record<string, string>>({});
 
   // QR dialog
   const [qrBatch, setQrBatch] = useState<Batch | null>(null);
 
   const fetchCustomers = async () => {
     if (!user) return;
-    const { data } = await supabase.from("students").select("id,name,email,phone,address,notes,height_cm,weight_kg,batch_id").eq("user_id", user.id).order("name");
-    setCustomers((data as Customer[]) || []);
+    const { data } = await supabase.from("students").select("id,name,email,phone,address,notes,height_cm,weight_kg,batch_id,custom_data").eq("user_id", user.id).order("name");
+    const rows = (data || []).map((c: any) => ({ ...c, custom_data: (c.custom_data && typeof c.custom_data === "object") ? c.custom_data : {} })) as Customer[];
+    setCustomers(rows);
   };
   const fetchBatches = async () => {
     if (!user) return;
     const { data } = await supabase.from("batches").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
-    setBatches((data as Batch[]) || []);
+    const rows = (data || []).map((b: any) => ({ ...b, custom_fields: Array.isArray(b.custom_fields) ? b.custom_fields : [] })) as Batch[];
+    setBatches(rows);
   };
   useEffect(() => { fetchCustomers(); fetchBatches(); }, [user]);
 
@@ -97,6 +105,10 @@ const Customers = () => {
     const name = batchForm.name.trim();
     if (!name) { toast.error("Name required"); return; }
     const required_fields = Array.from(new Set(["name", ...batchForm.required_fields]));
+    const cleaned_custom = batchForm.custom_fields
+      .map((f) => ({ ...f, name: f.name.trim() }))
+      .filter((f) => f.name.length > 0);
+    if (cleaned_custom.some((f) => f.name.length > 60)) { toast.error("Custom field names must be 60 characters or less"); return; }
     const payload = {
       user_id: user.id,
       name,
@@ -104,6 +116,7 @@ const Customers = () => {
       start_date: batchForm.start_date || null,
       fee: batchForm.fee ? Number(batchForm.fee) : 0,
       required_fields,
+      custom_fields: cleaned_custom as any,
     };
     const { error } = editingBatchId
       ? await supabase.from("batches").update(payload).eq("id", editingBatchId)
@@ -115,7 +128,11 @@ const Customers = () => {
 
   const editBatch = (b: Batch) => {
     setEditingBatchId(b.id);
-    setBatchForm({ name: b.name, description: b.description || "", start_date: b.start_date || "", fee: b.fee?.toString() || "", required_fields: b.required_fields?.length ? b.required_fields : ["name"] });
+    setBatchForm({
+      name: b.name, description: b.description || "", start_date: b.start_date || "",
+      fee: b.fee?.toString() || "", required_fields: b.required_fields?.length ? b.required_fields : ["name"],
+      custom_fields: Array.isArray(b.custom_fields) ? b.custom_fields : [],
+    });
     setBatchOpen(true);
   };
 
@@ -126,7 +143,7 @@ const Customers = () => {
   };
 
   const resetBatchForm = () => {
-    setBatchForm({ name: "", description: "", start_date: "", fee: "", required_fields: ["name"] });
+    setBatchForm({ name: "", description: "", start_date: "", fee: "", required_fields: ["name"], custom_fields: [] });
     setEditingBatchId(null); setBatchOpen(false);
   };
 
@@ -140,11 +157,25 @@ const Customers = () => {
     }));
   };
 
+  const addCustomField = () => {
+    setBatchForm((prev) => ({
+      ...prev,
+      custom_fields: [...prev.custom_fields, { id: crypto.randomUUID(), name: "", required: false, enabled: true }],
+    }));
+  };
+  const updateCustomField = (id: string, patch: Partial<CustomField>) => {
+    setBatchForm((prev) => ({ ...prev, custom_fields: prev.custom_fields.map((f) => f.id === id ? { ...f, ...patch } : f) }));
+  };
+  const removeCustomField = (id: string) => {
+    setBatchForm((prev) => ({ ...prev, custom_fields: prev.custom_fields.filter((f) => f.id !== id) }));
+  };
+
   // ---------- Customer CRUD ----------
   const openAddCustomer = (batchId: string) => {
     setEditingCustId(null);
     setActiveBatchId(batchId);
     setCustForm({ name: "", email: "", phone: "", address: "", notes: "", height: "", weight: "" });
+    setCustCustom({});
     setCustOpen(true);
   };
 
@@ -152,6 +183,7 @@ const Customers = () => {
     setEditingCustId(c.id);
     setActiveBatchId(c.batch_id);
     setCustForm({ name: c.name, email: c.email || "", phone: c.phone || "", address: c.address || "", notes: c.notes || "", height: c.height_cm?.toString() || "", weight: c.weight_kg?.toString() || "" });
+    setCustCustom((c.custom_data && typeof c.custom_data === "object") ? { ...c.custom_data } : {});
     setCustOpen(true);
   };
 
@@ -163,6 +195,14 @@ const Customers = () => {
     const weightNum = custForm.weight ? Number(custForm.weight) : null;
     if (heightNum !== null && (Number.isNaN(heightNum) || heightNum < 30 || heightNum > 272)) { toast.error("Enter a valid height in cm"); return; }
     if (weightNum !== null && (Number.isNaN(weightNum) || weightNum < 2 || weightNum > 500)) { toast.error("Enter a valid weight in kg"); return; }
+    const activeBatch = batches.find((b) => b.id === activeBatchId);
+    const activeCustomFields = (activeBatch?.custom_fields || []).filter((f) => f.enabled !== false);
+    const customDataClean: Record<string, string> = {};
+    for (const f of activeCustomFields) {
+      const v = (custCustom[f.id] || "").trim();
+      if (f.required && !v) { toast.error(`${f.name} is required`); return; }
+      if (v) customDataClean[f.id] = v.slice(0, 500);
+    }
     const payload = {
       user_id: user.id,
       batch_id: activeBatchId,
@@ -173,13 +213,14 @@ const Customers = () => {
       notes: custForm.notes.trim() || null,
       height_cm: heightNum,
       weight_kg: weightNum,
+      custom_data: customDataClean as any,
     };
     const { error } = editingCustId
       ? await supabase.from("students").update(payload).eq("id", editingCustId)
       : await supabase.from("students").insert(payload);
     if (error) { toast.error(error.message); return; }
     toast.success(editingCustId ? "Customer updated" : "Customer added");
-    setCustOpen(false); setEditingCustId(null); setActiveBatchId(null);
+    setCustOpen(false); setEditingCustId(null); setActiveBatchId(null); setCustCustom({});
     fetchCustomers();
   };
 
@@ -206,7 +247,7 @@ const Customers = () => {
           <DialogTrigger asChild>
             <Button><Plus className="h-4 w-4 mr-2" />Add Batch</Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="font-display">{editingBatchId ? "Edit" : "Add"} Batch</DialogTitle>
               <DialogDescription>Batch details (owner-only).</DialogDescription>
@@ -234,6 +275,49 @@ const Customers = () => {
                   })}
                 </div>
               </div>
+
+              <div className="space-y-3 rounded-md border p-3">
+                <div>
+                  <Label className="text-sm font-medium">Other (Custom Fields)</Label>
+                  <p className="text-xs text-muted-foreground">Add your own questions like Emergency Contact, Blood Group, Occupation, etc.</p>
+                </div>
+                {batchForm.custom_fields.length === 0 ? (
+                  <p className="text-xs italic text-muted-foreground">No custom fields yet.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {batchForm.custom_fields.map((cf) => (
+                      <div key={cf.id} className="rounded-md border bg-muted/30 p-2 space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Input
+                            value={cf.name}
+                            onChange={(e) => updateCustomField(cf.id, { name: e.target.value })}
+                            placeholder="Enter custom field name"
+                            maxLength={60}
+                            className="flex-1 h-9"
+                          />
+                          <button type="button" onClick={() => removeCustomField(cf.id)} className="p-2 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10" title="Delete field">
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <Switch checked={cf.required} onCheckedChange={(v) => updateCustomField(cf.id, { required: !!v })} />
+                            <span>Required</span>
+                          </label>
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <Switch checked={cf.enabled} onCheckedChange={(v) => updateCustomField(cf.id, { enabled: !!v })} />
+                            <span>Enabled</span>
+                          </label>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <Button type="button" variant="outline" size="sm" onClick={addCustomField}>
+                  <Plus className="h-4 w-4 mr-2" />Add Custom Field
+                </Button>
+              </div>
+
               <Button type="submit" className="w-full">{editingBatchId ? "Update" : "Add"} Batch</Button>
             </form>
           </DialogContent>
@@ -297,6 +381,11 @@ const Customers = () => {
                               </p>
                             )}
                             {c.address && <p className="text-xs text-muted-foreground truncate mt-0.5">{c.address}</p>}
+                            {b.custom_fields?.filter((f) => f.enabled !== false).map((f) => {
+                              const v = c.custom_data?.[f.id];
+                              if (!v) return null;
+                              return <p key={f.id} className="text-xs text-muted-foreground mt-0.5 truncate"><span className="font-medium text-foreground/80">{f.name}:</span> {v}</p>;
+                            })}
                           </div>
                           <div className="flex items-center gap-1 shrink-0">
                             <DropdownMenu>
@@ -330,8 +419,8 @@ const Customers = () => {
       )}
 
       {/* Customer dialog */}
-      <Dialog open={custOpen} onOpenChange={(v) => { if (!v) { setCustOpen(false); setEditingCustId(null); setActiveBatchId(null); } }}>
-        <DialogContent>
+      <Dialog open={custOpen} onOpenChange={(v) => { if (!v) { setCustOpen(false); setEditingCustId(null); setActiveBatchId(null); setCustCustom({}); } }}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="font-display">{editingCustId ? "Edit" : "Add"} Customer</DialogTitle>
             <DialogDescription>{batches.find((b) => b.id === activeBatchId)?.name}</DialogDescription>
@@ -348,6 +437,17 @@ const Customers = () => {
             </div>
             <div className="space-y-2"><Label>Address</Label><Textarea value={custForm.address} onChange={(e) => setCustForm({ ...custForm, address: e.target.value })} maxLength={300} rows={2} /></div>
             <div className="space-y-2"><Label>Notes</Label><Textarea value={custForm.notes} onChange={(e) => setCustForm({ ...custForm, notes: e.target.value })} maxLength={1000} /></div>
+            {batches.find((b) => b.id === activeBatchId)?.custom_fields?.filter((f) => f.enabled !== false).map((f) => (
+              <div key={f.id} className="space-y-2">
+                <Label>{f.name} {f.required && <span className="text-destructive">*</span>}</Label>
+                <Input
+                  value={custCustom[f.id] || ""}
+                  onChange={(e) => setCustCustom((prev) => ({ ...prev, [f.id]: e.target.value }))}
+                  maxLength={500}
+                  required={f.required}
+                />
+              </div>
+            ))}
             <Button type="submit" className="w-full">{editingCustId ? "Update" : "Add"} Customer</Button>
           </form>
         </DialogContent>
