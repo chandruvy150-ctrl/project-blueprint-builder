@@ -164,17 +164,19 @@ const Renewals = () => {
     });
   }, [renewals, filter, search]);
 
-  const sendReminder = async (r: Renewal) => {
-    if (!r.customer.phone) { toast.error("Customer has no phone number"); return; }
-    if (!r.renewalDate) { toast.error("No renewal date set"); return; }
+  const buildWaUrl = (r: Renewal): string | null => {
     const phone = sanitizePhone(r.customer.phone);
-    if (!phone) { toast.error("Invalid phone"); return; }
-    const url = `https://wa.me/${phone}?text=${encodeURIComponent(buildMessage(r.customer.name, r.renewalDate))}`;
-    window.open(url, "_blank", "noopener");
-    if (r.latest) {
-      await supabase.from("student_payments").update({ reminder_sent_at: new Date().toISOString() } as any).eq("id", r.latest.id);
-      fetchAll();
-    }
+    if (!phone || !r.renewalDate) return null;
+    return `https://wa.me/${phone}?text=${encodeURIComponent(buildMessage(r.customer.name, r.renewalDate))}`;
+  };
+
+  const markReminderSent = async (r: Renewal) => {
+    if (!r.latest) return;
+    await supabase
+      .from("student_payments")
+      .update({ reminder_sent_at: new Date().toISOString() } as any)
+      .eq("id", r.latest.id);
+    fetchAll();
   };
 
   const sendBulk = async () => {
@@ -182,13 +184,16 @@ const Renewals = () => {
     if (targets.length === 0) { toast.error("No customers due in the next 7 days"); return; }
     let opened = 0;
     for (const r of targets) {
-      const phone = sanitizePhone(r.customer.phone);
-      if (!phone || !r.renewalDate) continue;
-      const url = `https://wa.me/${phone}?text=${encodeURIComponent(buildMessage(r.customer.name, r.renewalDate))}`;
-      window.open(url, "_blank", "noopener");
-      opened++;
+      const url = buildWaUrl(r);
+      if (!url) continue;
+      const win = window.open(url, "_blank", "noopener,noreferrer");
+      if (win) opened++;
     }
-    const ids = targets.map((r) => r.latest?.id).filter(Boolean) as string[];
+    if (opened === 0) {
+      toast.error("Popup blocked. Please allow popups for this site, then retry.");
+      return;
+    }
+    const ids = targets.slice(0, opened).map((r) => r.latest?.id).filter(Boolean) as string[];
     if (ids.length) {
       await supabase.from("student_payments").update({ reminder_sent_at: new Date().toISOString() } as any).in("id", ids);
     }
