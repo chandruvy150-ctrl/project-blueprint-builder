@@ -18,6 +18,8 @@ interface StudioContextValue {
   backgroundUrl: string | null;
   paymentsPinSet: boolean;
   appLockPinSet: boolean;
+  biometricEnabled: boolean;
+  biometricCredentialId: string | null;
   ownerId: string | null;
   isOwner: boolean;
   loading: boolean;
@@ -27,8 +29,11 @@ interface StudioContextValue {
   uploadBackground: (file: File) => Promise<void>;
   setBackgroundFromUrl: (url: string) => Promise<void>;
   removeBackground: () => Promise<void>;
-  setPaymentsPin: (pin: string | null) => Promise<void>;
+  setPaymentsPassword: (pin: string | null, currentPassword?: string) => Promise<void>;
   verifyPaymentsPin: (pin: string) => Promise<boolean>;
+  enableBiometric: () => Promise<void>;
+  disableBiometric: () => Promise<void>;
+  verifyBiometricUnlock: () => Promise<boolean>;
   setAppLockPin: (pin: string | null) => Promise<void>;
   verifyAppLockPin: (pin: string) => Promise<boolean>;
 }
