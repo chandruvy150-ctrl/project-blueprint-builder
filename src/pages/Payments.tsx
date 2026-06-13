@@ -119,6 +119,7 @@ const Payments = () => {
       reminder_sent_at: null,
     } as any);
     if (error) { toast.error(error.message); return; }
+    await logAudit(ownerId, "payment.created", { amount, duration_months: effectiveMonths, valid_until: renewalDate }, { type: "student_payment", id: form.student_id });
     toast.success("Payment recorded · renewal scheduled");
     setForm({ ...form, amount: "", customDuration: "" });
     setAddOpen(false);
@@ -127,6 +128,7 @@ const Payments = () => {
 
   const deletePayment = async (id: string) => {
     await supabase.from("student_payments").delete().eq("id", id);
+    await logAudit(ownerId, "payment.deleted", {}, { type: "student_payment", id });
     toast.success("Removed"); fetchAll();
   };
 
