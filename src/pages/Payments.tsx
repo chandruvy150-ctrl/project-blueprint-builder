@@ -46,6 +46,7 @@ const addMonths = (isoDate: string, months: number): string => {
 
 const Payments = () => {
   const { user } = useAuth();
+  const { ownerId } = useStudio();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
