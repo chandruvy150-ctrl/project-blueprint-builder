@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useStudio } from "@/contexts/StudioContext";
+import { logAudit } from "@/lib/audit";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -44,6 +46,7 @@ const addMonths = (isoDate: string, months: number): string => {
 
 const Payments = () => {
   const { user } = useAuth();
+  const { ownerId } = useStudio();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
@@ -116,6 +119,7 @@ const Payments = () => {
       reminder_sent_at: null,
     } as any);
     if (error) { toast.error(error.message); return; }
+    await logAudit(ownerId, "payment.created", { amount, duration_months: effectiveMonths, valid_until: renewalDate }, { type: "student_payment", id: form.student_id });
     toast.success("Payment recorded · renewal scheduled");
     setForm({ ...form, amount: "", customDuration: "" });
     setAddOpen(false);
@@ -124,6 +128,7 @@ const Payments = () => {
 
   const deletePayment = async (id: string) => {
     await supabase.from("student_payments").delete().eq("id", id);
+    await logAudit(ownerId, "payment.deleted", {}, { type: "student_payment", id });
     toast.success("Removed"); fetchAll();
   };
 
