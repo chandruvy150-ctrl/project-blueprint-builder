@@ -20,27 +20,30 @@ interface Payment {
   paid_on: string;
   method: string;
   duration_months: number | null;
+  duration_value: number | null;
+  duration_unit: string | null;
   valid_until: string | null;
 }
 
 const paymentMethods = ["cash", "upi", "card", "bank-transfer", "other"];
-const durationPresets = [
-  { value: "1", label: "1 Month" },
-  { value: "2", label: "2 Months" },
-  { value: "3", label: "3 Months" },
-  { value: "6", label: "6 Months" },
-  { value: "12", label: "12 Months" },
-  { value: "custom", label: "Custom" },
+type Unit = "days" | "months" | "years";
+const unitOptions: { value: Unit; label: string }[] = [
+  { value: "days", label: "Days" },
+  { value: "months", label: "Months" },
+  { value: "years", label: "Years" },
 ];
+const unitMax: Record<Unit, number> = { days: 365, months: 60, years: 10 };
 
-const addMonths = (isoDate: string, months: number): string => {
-  if (!isoDate || !months || months <= 0) return "";
+const addDuration = (isoDate: string, value: number, unit: Unit): string => {
+  if (!isoDate || !value || value <= 0) return "";
   const [y, m, d] = isoDate.split("-").map(Number);
-  const dt = new Date(Date.UTC(y, m - 1 + months, d));
-  // Handle month-end overflow: if day shifted, clamp to last day of target month
-  if (dt.getUTCDate() !== d) {
-    dt.setUTCDate(0);
+  if (unit === "days") {
+    const dt = new Date(Date.UTC(y, m - 1, d + value));
+    return dt.toISOString().slice(0, 10);
   }
+  const months = unit === "years" ? value * 12 : value;
+  const dt = new Date(Date.UTC(y, m - 1 + months, d));
+  if (dt.getUTCDate() !== d) dt.setUTCDate(0);
   return dt.toISOString().slice(0, 10);
 };
 
