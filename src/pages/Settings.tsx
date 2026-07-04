@@ -295,34 +295,6 @@ const Settings = () => {
         </CardContent>
       </Card>
 
-      {/* Audit log */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="font-display flex items-center gap-2">
-            <History className="h-5 w-5" /> Recent security &amp; payment activity
-          </CardTitle>
-          <CardDescription>Latest 15 events on this studio. Owner-only view.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {auditLogs.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No activity yet.</p>
-          ) : (
-            <ul className="divide-y">
-              {auditLogs.map((log) => (
-                <li key={log.id} className="py-2.5 text-sm flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className="font-medium truncate">{log.action.replace(/_/g, " ").replace(/\./g, " · ")}</div>
-                    <div className="text-xs text-muted-foreground truncate">{log.device || "unknown device"}</div>
-                  </div>
-                  <div className="text-xs text-muted-foreground whitespace-nowrap">
-                    {new Date(log.created_at).toLocaleString()}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
 
       {/* App Lock PIN */}
       <Card>
