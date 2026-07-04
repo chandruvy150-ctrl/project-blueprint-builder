@@ -12,7 +12,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Lock, ShieldCheck, ShieldAlert, Sun, Moon, Check, KeyRound, Fingerprint, History } from "lucide-react";
+import { Lock, ShieldCheck, ShieldAlert, Sun, Moon, Check, KeyRound, Fingerprint } from "lucide-react";
 import { toast } from "sonner";
 import { biometricSupported } from "@/lib/biometric";
 import { TransferOwnershipCard } from "@/components/TransferOwnershipCard";
