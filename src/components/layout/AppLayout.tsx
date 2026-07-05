@@ -108,7 +108,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
           <StudioBrand />
         </div>
         <nav className="flex-1 px-3 space-y-1">
-          {navItems.map((item) => {
+          {visibleNav.map((item) => {
             const isActive = location.pathname === item.to;
             return (
               <Link
@@ -146,7 +146,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
               <button onClick={() => setSidebarOpen(false)}><X className="h-5 w-5" /></button>
             </div>
             <nav className="px-3 space-y-1">
-              {navItems.map((item) => {
+              {visibleNav.map((item) => {
                 const isActive = location.pathname === item.to;
                 return (
                   <Link
@@ -190,7 +190,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
         </div>
 
         <nav className="md:hidden flex border-t border-border bg-card">
-          {navItems.map((item) => {
+          {visibleNav.map((item) => {
             const isActive = location.pathname === item.to;
             return (
               <Link
