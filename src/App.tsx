@@ -20,6 +20,7 @@ import Gallery from "./pages/Gallery";
 import PublicStudio from "./pages/PublicStudio";
 import NotFound from "./pages/NotFound";
 import PaymentsGuard from "./components/PaymentsGuard";
+import PermissionGuard from "./components/PermissionGuard";
 
 const queryClient = new QueryClient();
 
@@ -49,11 +50,11 @@ const App = () => (
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/join/:token" element={<Join />} />
             <Route path="/studio/:ownerId" element={<PublicStudio />} />
-            <Route path="/" element={<ProtectedRoute><Customers /></ProtectedRoute>} />
-            <Route path="/gallery" element={<ProtectedRoute><Gallery /></ProtectedRoute>} />
-            <Route path="/media" element={<ProtectedRoute><Media /></ProtectedRoute>} />
-            <Route path="/payments" element={<ProtectedRoute><PaymentsGuard><Payments /></PaymentsGuard></ProtectedRoute>} />
-            <Route path="/renewals" element={<ProtectedRoute><Renewals /></ProtectedRoute>} />
+            <Route path="/" element={<ProtectedRoute><PermissionGuard module="customers"><Customers /></PermissionGuard></ProtectedRoute>} />
+            <Route path="/gallery" element={<ProtectedRoute><PermissionGuard module="gallery"><Gallery /></PermissionGuard></ProtectedRoute>} />
+            <Route path="/media" element={<ProtectedRoute><PermissionGuard module="classes"><Media /></PermissionGuard></ProtectedRoute>} />
+            <Route path="/payments" element={<ProtectedRoute><PermissionGuard module="payments"><PaymentsGuard><Payments /></PaymentsGuard></PermissionGuard></ProtectedRoute>} />
+            <Route path="/renewals" element={<ProtectedRoute><PermissionGuard module="renewals"><Renewals /></PermissionGuard></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="/students" element={<Navigate to="/" replace />} />
             <Route path="/classes" element={<Navigate to="/media" replace />} />

@@ -12,6 +12,13 @@ const sha256Hex = async (input: string) => {
     .join("");
 };
 
+export type ModuleKey = "customers" | "gallery" | "classes" | "payments" | "renewals";
+export type ModulePermissions = Record<ModuleKey, boolean>;
+
+const ALL_ALLOWED: ModulePermissions = {
+  customers: true, gallery: true, classes: true, payments: true, renewals: true,
+};
+
 interface StudioContextValue {
   studioName: string;
   logoUrl: string | null;
@@ -22,6 +29,7 @@ interface StudioContextValue {
   biometricCredentialId: string | null;
   ownerId: string | null;
   isOwner: boolean;
+  permissions: ModulePermissions;
   loading: boolean;
   refresh: () => Promise<void>;
   updateName: (name: string) => Promise<void>;
@@ -51,6 +59,7 @@ export const StudioProvider = ({ children }: { children: ReactNode }) => {
   const [biometricEnabled, setBiometricEnabled] = useState(false);
   const [ownerId, setOwnerId] = useState<string | null>(null);
   const [isOwner, setIsOwner] = useState(false);
+  const [permissions, setPermissions] = useState<ModulePermissions>(ALL_ALLOWED);
   const [loading, setLoading] = useState(true);
 
   const refresh = async () => {
@@ -63,7 +72,28 @@ export const StudioProvider = ({ children }: { children: ReactNode }) => {
       .maybeSingle();
     const owner = roleRow?.owner_id || user.id;
     setOwnerId(owner);
-    setIsOwner(roleRow?.role === "owner" || !roleRow);
+    const isOwnerRole = roleRow?.role === "owner" || !roleRow;
+    setIsOwner(isOwnerRole);
+    if (isOwnerRole) {
+      setPermissions(ALL_ALLOWED);
+    } else {
+      const { data: perm } = await supabase
+        .from("staff_permissions" as any)
+        .select("can_customers,can_gallery,can_classes,can_payments,can_renewals,is_active")
+        .eq("staff_user_id", user.id)
+        .maybeSingle();
+      const p = (perm ?? null) as any;
+      if (!p) {
+        setPermissions(ALL_ALLOWED); // grandfather
+      } else if (!p.is_active) {
+        setPermissions({ customers: false, gallery: false, classes: false, payments: false, renewals: false });
+      } else {
+        setPermissions({
+          customers: !!p.can_customers, gallery: !!p.can_gallery, classes: !!p.can_classes,
+          payments: !!p.can_payments, renewals: !!p.can_renewals,
+        });
+      }
+    }
     const { data: settings } = await supabase
       .from("studio_settings")
       .select("*")
@@ -250,7 +280,7 @@ export const StudioProvider = ({ children }: { children: ReactNode }) => {
       paymentsPinSet: !!paymentsPinHash,
       appLockPinSet: !!appLockPinHash,
       biometricEnabled, biometricCredentialId,
-      ownerId, isOwner, loading, refresh,
+      ownerId, isOwner, permissions, loading, refresh,
       updateName, uploadLogo, uploadBackground, setBackgroundFromUrl, removeBackground,
       setPaymentsPassword, verifyPaymentsPin,
       enableBiometric, disableBiometric, verifyBiometricUnlock,

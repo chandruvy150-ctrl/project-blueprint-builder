@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { biometricSupported } from "@/lib/biometric";
 import { TransferOwnershipCard } from "@/components/TransferOwnershipCard";
 import { ChatbotKnowledgeCard } from "@/components/ChatbotKnowledgeCard";
+import { StaffPermissionsCard } from "@/components/StaffPermissionsCard";
 
 
 const Settings = () => {
@@ -49,15 +50,8 @@ const Settings = () => {
   useEffect(() => { biometricSupported().then(setBioAvailable); }, []);
 
 
-  if (!isOwner) {
-    return (
-      <Card className="max-w-xl">
-        <CardContent className="py-10 text-center text-muted-foreground">
-          Only the studio owner can manage settings.
-        </CardContent>
-      </Card>
-    );
-  }
+  // Settings page is accessible to all users; owner-only sections are gated below.
+
 
 
   const handleLockSave = async (e: React.FormEvent) => {
@@ -147,7 +141,8 @@ const Settings = () => {
         </CardContent>
       </Card>
 
-      {/* Security Settings */}
+      {/* Payment Lock — owner only */}
+      {isOwner && (
       <Card className="border-primary/30">
         <CardHeader>
           <CardTitle className="font-display flex items-center gap-2">
@@ -278,9 +273,11 @@ const Settings = () => {
           </p>
         </CardContent>
       </Card>
+      )}
 
 
-      {/* App Lock PIN */}
+      {/* App Lock PIN — owner only */}
+      {isOwner && (
       <Card>
         <CardHeader>
           <CardTitle className="font-display flex items-center gap-2"><Lock className="h-5 w-5" /> App Lock PIN</CardTitle>
@@ -320,12 +317,16 @@ const Settings = () => {
           </form>
         </CardContent>
       </Card>
+      )}
 
-      {/* AI Chatbot Knowledge Base */}
-      <ChatbotKnowledgeCard />
+      {/* Staff & Permissions — owner only */}
+      <StaffPermissionsCard />
 
-      {/* Transfer Ownership */}
-      <TransferOwnershipCard />
+      {/* AI Chatbot Knowledge Base — owner only */}
+      {isOwner && <ChatbotKnowledgeCard />}
+
+      {/* Transfer Ownership — owner only */}
+      {isOwner && <TransferOwnershipCard />}
 
     </div>
   );
