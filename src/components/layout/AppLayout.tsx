@@ -95,9 +95,10 @@ const InviteStaffDialog = () => {
 
 const AppLayout = ({ children }: { children: ReactNode }) => {
   const { signOut } = useAuth();
-  const { ownerId } = useStudio();
+  const { ownerId, isOwner, permissions } = useStudio();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const visibleNav = navItems.filter((n) => isOwner || n.module === null || permissions[n.module]);
 
   return (
     <div className="flex min-h-screen bg-background">
