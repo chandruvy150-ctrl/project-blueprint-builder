@@ -24,74 +24,18 @@ const navItems: { to: string; label: string; icon: any; module: ModuleKey | null
 ];
 
 const InviteStaffDialog = () => {
-  const { isOwner, ownerId } = useStudio();
-  const [open, setOpen] = useState(false);
-  const [email, setEmail] = useState("");
-  const [invite, setInvite] = useState<{ email: string; accepted_at: string | null } | null>(null);
-
-  const load = async () => {
-    if (!ownerId) return;
-    const { data } = await supabase.from("staff_invitations").select("email, accepted_at").eq("owner_id", ownerId).maybeSingle();
-    setInvite(data);
-  };
-  useEffect(() => { if (open) load(); }, [open, ownerId]);
-
-  const handleInvite = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!ownerId) return;
-    const cleaned = email.trim().toLowerCase();
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(cleaned)) { toast.error("Enter a valid email"); return; }
-    const { error } = await supabase.from("staff_invitations").upsert({ owner_id: ownerId, email: cleaned, accepted_at: null }, { onConflict: "owner_id" });
-    if (error) { toast.error(error.message); return; }
-    toast.success("Invite saved — share signup link with them");
-    setEmail(""); load();
-  };
-
-  const handleRevoke = async () => {
-    if (!ownerId) return;
-    await supabase.from("staff_invitations").delete().eq("owner_id", ownerId);
-    setInvite(null);
-    toast.success("Invitation revoked");
-  };
-
+  const { isOwner } = useStudio();
   if (!isOwner) return null;
-
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="sm" className="gap-2"><UserPlus className="h-4 w-4" />Staff</Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle className="font-display">Invite staff member</DialogTitle>
-          <DialogDescription>You can invite one staff member who will share access to your studio data.</DialogDescription>
-        </DialogHeader>
-        {invite ? (
-          <div className="space-y-3">
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-muted">
-              <Mail className="h-4 w-4 text-muted-foreground" />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{invite.email}</p>
-                <p className="text-xs text-muted-foreground">{invite.accepted_at ? "Joined" : "Pending — ask them to sign up with this email"}</p>
-              </div>
-              <button onClick={handleRevoke} className="text-muted-foreground hover:text-destructive p-2" aria-label="Revoke"><Trash2 className="h-4 w-4" /></button>
-            </div>
-            <p className="text-xs text-muted-foreground">To invite a different person, revoke this first.</p>
-          </div>
-        ) : (
-          <form onSubmit={handleInvite} className="space-y-4">
-            <div className="space-y-2">
-              <Label>Staff email</Label>
-              <Input type="email" autoFocus value={email} onChange={(e) => setEmail(e.target.value)} placeholder="staff@example.com" maxLength={255} required />
-            </div>
-            <Button type="submit" className="w-full">Send Invitation</Button>
-            <p className="text-xs text-muted-foreground text-center">They sign up with this email to join your workspace.</p>
-          </form>
-        )}
-      </DialogContent>
-    </Dialog>
+    <Link
+      to="/settings"
+      className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/50 transition-colors"
+    >
+      <UserPlus className="h-4 w-4" /> Staff &amp; Permissions
+    </Link>
   );
 };
+
 
 const AppLayout = ({ children }: { children: ReactNode }) => {
   const { signOut } = useAuth();
