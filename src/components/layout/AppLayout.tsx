@@ -12,13 +12,15 @@ import StudioBrand from "./StudioBrand";
 import SupportChatWidget from "@/components/SupportChatWidget";
 import { toast } from "sonner";
 
-const navItems = [
-  { to: "/", label: "Customers", icon: Users },
-  { to: "/gallery", label: "My Gallery", icon: ImageIcon },
-  { to: "/media", label: "Classes", icon: PlayCircle },
-  { to: "/payments", label: "Payments", icon: IndianRupee },
-  { to: "/renewals", label: "Renewals", icon: CalendarClock },
-  { to: "/settings", label: "Settings", icon: SettingsIcon },
+import { ModuleKey } from "@/contexts/StudioContext";
+
+const navItems: { to: string; label: string; icon: any; module: ModuleKey | null }[] = [
+  { to: "/", label: "Customers", icon: Users, module: "customers" },
+  { to: "/gallery", label: "My Gallery", icon: ImageIcon, module: "gallery" },
+  { to: "/media", label: "Classes", icon: PlayCircle, module: "classes" },
+  { to: "/payments", label: "Payments", icon: IndianRupee, module: "payments" },
+  { to: "/renewals", label: "Renewals", icon: CalendarClock, module: "renewals" },
+  { to: "/settings", label: "Settings", icon: SettingsIcon, module: null },
 ];
 
 const InviteStaffDialog = () => {
