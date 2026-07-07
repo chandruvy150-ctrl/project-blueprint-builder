@@ -229,9 +229,23 @@ const Customers = () => {
     fetchCustomers();
   };
 
-  const deleteCustomer = async (id: string) => {
-    await supabase.from("students").delete().eq("id", id);
-    toast.success("Customer removed"); fetchCustomers();
+  const confirmDeleteCustomer = async () => {
+    if (!deleteTarget || !user) return;
+    setDeleting(true);
+    try {
+      // Cascade delete related records first (no FK cascade in schema).
+      const { error: payErr } = await supabase.from("student_payments").delete().eq("student_id", deleteTarget.id);
+      if (payErr) throw payErr;
+      const { error: custErr } = await supabase.from("students").delete().eq("id", deleteTarget.id);
+      if (custErr) throw custErr;
+      toast.success("Customer deleted successfully.");
+      setDeleteTarget(null);
+      fetchCustomers();
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to delete customer");
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const moveCustomer = async (customerId: string, targetBatchId: string) => {
