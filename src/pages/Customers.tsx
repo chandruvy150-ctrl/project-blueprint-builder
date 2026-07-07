@@ -58,8 +58,11 @@ const phoneRegex = /^[+\d][\d\s\-()]{6,19}$/;
 
 const Customers = () => {
   const { user } = useAuth();
+  const { isOwner } = useStudio();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [batches, setBatches] = useState<Batch[]>([]);
+  const [deleteTarget, setDeleteTarget] = useState<Customer | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   // Batch dialog
   const [batchOpen, setBatchOpen] = useState(false);
