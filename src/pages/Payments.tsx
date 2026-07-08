@@ -79,7 +79,7 @@ const startOfRange = (key: RangeKey): Date | null => {
 
 const Payments = () => {
   const { user } = useAuth();
-  const { ownerId } = useStudio();
+  const { ownerId, studioName } = useStudio();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [batches, setBatches] = useState<Batch[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -89,7 +89,6 @@ const Payments = () => {
   const [receiptOpen, setReceiptOpen] = useState(false);
   const [receiptData, setReceiptData] = useState<ReceiptData | null>(null);
   const [studioAddress, setStudioAddress] = useState<string>("");
-  const { studioName } = useStudio();
   const [form, setForm] = useState({
     student_id: "",
     amount: "",
