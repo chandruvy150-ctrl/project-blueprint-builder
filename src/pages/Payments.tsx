@@ -412,7 +412,38 @@ const Payments = () => {
                                   {p.valid_until ? ` · renews ${new Date(p.valid_until).toLocaleDateString()}` : ""}
                                 </p>
                               </div>
-                              <button onClick={() => deletePayment(p.id)} aria-label="Delete" className="p-2 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0"><Trash2 className="h-4 w-4" /></button>
+                              <div className="flex items-center gap-1 shrink-0">
+                                <button
+                                  onClick={() => {
+                                    const batchName = c.batch_id ? (batchMap.get(c.batch_id) || "No Batch Assigned") : "No Batch Assigned";
+                                    const unit = p.duration_unit || (p.duration_months ? "months" : "months");
+                                    const val = p.duration_value ?? p.duration_months ?? 1;
+                                    const receiptNo = `TY-${new Date(p.paid_on).toISOString().slice(0,10).replace(/-/g,"")}-${p.id.slice(0,6).toUpperCase()}`;
+                                    setReceiptData({
+                                      receiptNumber: receiptNo,
+                                      dateIssued: p.paid_on,
+                                      customerName: c.name,
+                                      customerContact: c.phone || undefined,
+                                      batchName,
+                                      planDescription: `${batchName} Membership · ${val} ${unit}`,
+                                      paymentMethod: p.method,
+                                      amount: Number(p.amount),
+                                      durationValue: val,
+                                      durationUnit: unit,
+                                      renewalDate: p.valid_until || "",
+                                      studioName: studioName || "Trinetra Yoga",
+                                      studioAddress: studioAddress || undefined,
+                                    });
+                                    setReceiptOpen(true);
+                                  }}
+                                  aria-label="Generate Bill"
+                                  title="Generate Bill"
+                                  className="p-2 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10"
+                                >
+                                  <FileText className="h-4 w-4" />
+                                </button>
+                                <button onClick={() => deletePayment(p.id)} aria-label="Delete" className="p-2 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10"><Trash2 className="h-4 w-4" /></button>
+                              </div>
                             </div>
                           ))}
                         </div>
